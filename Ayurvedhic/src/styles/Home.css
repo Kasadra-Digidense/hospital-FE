@@ -1,0 +1,307 @@
+:root {
+  --primary: #1F7A4D;
+  --primary-dark: #145A36;
+  --primary-light: #E8F5EE;
+
+  --accent: #F28C28;
+  --accent-light: #D88A2B;
+
+  --bg: #F9FBFA;
+  --card-bg: #FFFFFF;
+  --border: #E5E7EB;
+
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+}
+
+/* GLOBAL */
+body {
+  margin: 0;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+/* ================= CONTAINER ================= */
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  /* page entry (same system as dashboard/sidebar) */
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.7s ease-out forwards;
+}
+
+/* shared animation (match dashboard/sidebar) */
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= NAVBAR ================= */
+.home-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 64px;
+
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  /* smooth entry */
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: fadeInUp 0.6s ease-out 0.1s forwards;
+}
+
+/* ================= LOGO SECTION ================= */
+.home-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* LOGO ANIMATION (KEEP FOCUS HERE) */
+.home-logo {
+  width: 52px;
+  height: 52px;
+
+  opacity: 0;
+  transform: scale(0.85);
+  animation: logoPop 0.7s ease-out 0.15s forwards;
+}
+
+@keyframes logoPop {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.home-hospital-name {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: fadeInUp 0.6s ease-out 0.2s forwards;
+}
+
+.home-tag {
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: 1px;
+
+  opacity: 0;
+  transform: translateY(8px);
+  animation: fadeInUp 0.6s ease-out 0.25s forwards;
+}
+
+/* ================= LOGIN BUTTON ================= */
+.home-login-btn {
+  padding: 10px 22px;
+  border-radius: 999px;
+
+  background: var(--primary);
+  color: #fff;
+  border: none;
+
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+
+  /* entry */
+  opacity: 0;
+  transform: translateY(-6px);
+  animation: fadeInUp 0.6s ease-out 0.2s forwards;
+}
+
+.home-login-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 20px rgba(31, 122, 77, 0.25);
+}
+
+.home-login-btn:active {
+  transform: scale(0.97);
+}
+
+/* ================= HERO ================= */
+.home-hero {
+  padding: 110px 20px 90px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* moving soft background blob */
+.home-hero::before {
+  content: "";
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: var(--primary-light);
+  border-radius: 50%;
+  top: -100px;
+  left: -100px;
+  filter: blur(80px);
+  animation: blobMove 10s ease-in-out infinite alternate;
+}
+
+@keyframes blobMove {
+  0% { transform: translate(0,0) scale(1); }
+  100% { transform: translate(40px,30px) scale(1.1); }
+}
+
+.home-hero-content {
+  position: relative;
+  max-width: 720px;
+  margin: auto;
+
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease-out 0.25s forwards;
+}
+
+.home-hero-title {
+  font-size: 42px;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: 18px;
+  color: var(--primary-dark);
+}
+
+.home-hero-text {
+  font-size: 17px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 32px;
+}
+
+/* HERO BUTTON */
+.home-hero-btn {
+  padding: 14px 30px;
+  border-radius: 999px;
+  border: none;
+
+  background: var(--accent);
+  color: #fff;
+
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+
+  transition: all 0.3s ease;
+
+  /* entry animation */
+  opacity: 0;
+  transform: translateY(15px);
+  animation: fadeInUp 0.8s ease-out 0.3s forwards;
+}
+
+.home-hero-btn:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 14px 28px rgba(242, 140, 40, 0.3);
+}
+
+.home-hero-btn:active {
+  transform: scale(0.97);
+}
+
+/* ================= INFO CARDS ================= */
+.home-info {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  padding: 80px 20px;
+  flex-wrap: wrap;
+}
+
+/* staggered card animation */
+.home-card {
+  width: 280px;
+  padding: 28px;
+  border-radius: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.7s ease-out forwards;
+
+  transition: all 0.35s ease;
+}
+
+.home-card:nth-child(1) { animation-delay: 0.2s; }
+.home-card:nth-child(2) { animation-delay: 0.3s; }
+.home-card:nth-child(3) { animation-delay: 0.4s; }
+
+/* hover effect */
+.home-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent, rgba(31,122,77,0.08));
+  opacity: 0;
+  transition: 0.3s;
+}
+
+.home-card:hover::before {
+  opacity: 1;
+}
+
+.home-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 30px rgba(0,0,0,0.08);
+}
+
+.home-card h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: var(--primary-dark);
+}
+
+.home-card p {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* ================= FOOTER ================= */
+.home-footer {
+  margin-top: auto;
+  padding: 50px 20px;
+  background: linear-gradient(to right, var(--primary-dark), var(--primary));
+  color: white;
+  text-align: center;
+
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease-out 0.4s forwards;
+}
+
+.home-footer-content h4 {
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.home-footer-content p {
+  margin: 6px 0;
+  font-size: 14px;
+  opacity: 0.9;
+}

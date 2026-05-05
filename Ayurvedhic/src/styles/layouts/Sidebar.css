@@ -1,0 +1,230 @@
+/* Layout wrapper */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #fafafa;
+}
+
+/* SIDEBAR CONTAINER */
+.sidebar-container {
+  width: 200px;
+  min-width: 200px;
+  background: #ffffff;
+  border-right: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 20px;
+  position: relative;
+  z-index: 10;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.02);
+}
+
+/* LOGO */
+.sidebar-logoSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.sidebar-logoImage {
+  max-width: 100%;
+  max-height: 80px; /* restrict height so it fits well */
+  object-fit: contain;
+}
+
+/* MENU */
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+  /* overflow-y: auto; */
+  padding-bottom: 20px;
+}
+
+.sidebar-menu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background-color: #e0e0e0;
+  border-radius: 4px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #333333;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 2; /* keep above decoration */
+}
+
+.sidebar-item svg {
+  color: #555555;
+  transition: color 0.2s ease;
+}
+
+.sidebar-item:hover {
+  background: #f4f9f5;
+  color: #1F7A4D;
+}
+
+.sidebar-item:hover svg {
+  color: #1F7A4D;
+}
+
+/* ACTIVE ITEM */
+.sidebar-active {
+  background: #e8f3ee;
+  color: #1F7A4D;
+  font-weight: 600;
+}
+
+.sidebar-active svg {
+  color: #1F7A4D;
+}
+
+/* LOGOUT at the end */
+.sidebar-footer-menu {
+  margin-top: auto;
+  padding-top: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.sidebar-logout {
+  color: #d9534f;
+}
+
+.sidebar-logout svg {
+  color: #d9534f;
+}
+
+.sidebar-logout:hover {
+  background: #fdf3f2;
+  color: #c9302c;
+}
+
+.sidebar-logout:hover svg {
+  color: #c9302c;
+}
+
+/* Sidebar Decoration - Leaves at bottom (creative touch) */
+.sidebar-decoration {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 250px;
+  background-image: radial-gradient(circle at bottom center, rgba(31, 122, 77, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sidebar-decoration::before {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  width: 150px;
+  height: 150px;
+  background-image: radial-gradient(circle, rgba(242, 139, 58, 0.05) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+/* MAIN CONTENT */
+.main-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  background-color: #fbfdfc; /* Match dashboard background */
+}
+
+.sidebar-container {
+  width: 200px;
+  min-width: 200px;
+  background: #ffffff;
+  border-right: 1px solid #f0f0f0;
+
+  display: flex;
+  flex-direction: column;
+  padding: 30px 20px;
+  position: relative;
+  z-index: 10;
+
+  box-shadow: 2px 0 10px rgba(0,0,0,0.02);
+
+  /* SAME AS DASHBOARD */
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+
+  color: #333;
+
+  transition: all 0.25s ease;
+
+  /* SAME MOTION STYLE */
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.sidebar-item:nth-child(1) { animation-delay: 0.15s; }
+.sidebar-item:nth-child(2) { animation-delay: 0.25s; }
+.sidebar-item:nth-child(3) { animation-delay: 0.35s; }
+.sidebar-item:nth-child(4) { animation-delay: 0.45s; }
+
+.sidebar-footer-menu {
+  margin-top: auto;
+  padding-top: 20px;
+
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.6s ease 0.5s forwards;
+}
+
+.sidebar-item:hover {
+  background: #f4f9f5;
+  color: #1F7A4D;
+
+  transform: translateY(-2px);
+}
+.sidebar-logoSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+
+  /* KEEP YOUR ORIGINAL ANIMATION */
+}
+

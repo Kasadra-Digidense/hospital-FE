@@ -1,0 +1,278 @@
+/* Container */
+.dashboard-container {
+  padding: 30px;
+  font-family: 'Inter', sans-serif;
+  background-color: #fbfdfc; /* very light green/grey background */
+  min-height: 100vh;
+}
+
+.dashboard-title {
+  color: #1F7A4D; /* Primary green from theme */
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.dashboard-subtitle {
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+.dashboard-section {
+  margin-top: 30px;
+}
+
+.dashboard-section-title {
+  color: #1F7A4D;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* Cards Wrapper */
+.dashboard-cards-wrapper {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+/* Base Card */
+.dashboard-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  flex: 1;
+  min-width: 280px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 1px solid #f0f4f1;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+/* Card Icons */
+.dashboard-card-icon-wrapper {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.dashboard-icon-green {
+  background-color: #e8f3ee;
+  color: #1F7A4D;
+}
+
+.dashboard-icon-orange {
+  background-color: #fff1e6;
+  color: #f28b3a; /* Orange from the image */
+}
+
+/* Content */
+.dashboard-card-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  z-index: 2; /* keep above the background pattern */
+}
+
+.dashboard-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.dashboard-text-green {
+  color: #1F7A4D;
+}
+
+.dashboard-text-orange {
+  color: #f28b3a;
+}
+
+.dashboard-card-desc {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+/* Buttons */
+.dashboard-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s ease;
+  width: fit-content;
+}
+
+.dashboard-btn-icon {
+  margin-left: 8px;
+}
+
+.dashboard-btn-green {
+  background-color: #1F7A4D;
+  color: #ffffff;
+}
+
+.dashboard-btn-green:hover {
+  background-color: #165a38;
+}
+
+.dashboard-btn-orange {
+  background-color: #f28b3a;
+  color: #ffffff;
+}
+
+.dashboard-btn-orange:hover {
+  background-color: #d87528;
+}
+
+/* Subtle background patterns to match the herbal/organic vibe */
+.dashboard-card-green::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle at bottom left, rgba(31, 122, 77, 0.04) 0%, transparent 60%);
+  border-radius: 0 100% 0 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dashboard-card-orange::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle at bottom left, rgba(242, 139, 58, 0.04) 0%, transparent 60%);
+  border-radius: 0 100% 0 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+
+
+
+.dashboard-container {
+  padding: 30px;
+  font-family: 'Inter', sans-serif;
+  background-color: #fbfdfc;
+  min-height: 100vh;
+
+  /* animation */
+  opacity: 0;
+  transform: translateY(10px);
+  animation: pageFadeIn 0.6s ease-out forwards;
+}
+
+@keyframes pageFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+.dashboard-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  flex: 1;
+  min-width: 280px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 1px solid #f0f4f1;
+
+  overflow: hidden;
+
+  /* animation */
+  opacity: 0;
+  transform: translateY(20px);
+  animation: cardIn 0.5s ease forwards;
+}
+
+@keyframes cardIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.dashboard-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dashboard-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-btn {
+  transition: all 0.25s ease;
+}
+
+.dashboard-btn:hover {
+  transform: translateY(-2px);
+}
+
+.dashboard-btn:active {
+  transform: scale(0.96);
+}
+
+.dashboard-card-icon-wrapper {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 20px;
+
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+
