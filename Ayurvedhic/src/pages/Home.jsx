@@ -1,6 +1,6 @@
-import React, { use } from "react";
+import React from "react";
 import "../styles/Home.css";
-import logo from "../assets/ayur_logo.png"; // adjust path
+import logo from "../assets/ayur_logo.png";
 import { useNavigate } from "react-router-dom";
 
 const Home = () => {
@@ -19,7 +19,14 @@ const Home = () => {
           </div>
         </div>
 
-        <button className="home-login-btn">Login</button>
+        <button
+          className="home-login-btn"
+          onClick={() => {
+            navigate("/login");
+          }}
+        >
+          Login
+        </button>
       </header>
 
       {/* HERO SECTION */}
