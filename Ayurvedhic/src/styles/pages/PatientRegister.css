@@ -1,0 +1,267 @@
+/* hospital.css - Corrected Width & Alignment */
+
+/* CSS Variables */
+:root {
+  --primary-green: #4CAF50;
+  --accent-orange: #FF9800;
+  --light-green: #e8f5e8;
+  --dark-green: #2E7D32;
+  --neutral-white: #ffffff;
+  --error-red: #f44336;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --border-radius: 12px;
+  --transition: all 0.3s ease;
+  --mixed-gradient: linear-gradient(45deg, var(--primary-green), var(--accent-orange));
+}
+
+/* Patient Page Container - Full Width */
+.patient-page {
+  display: flex;
+  justify-content: center;
+  width: 600px;
+  /* padding-left: 200px; */
+  margin-top: 100px;
+}
+
+/* Main Content Centering */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.title{
+  color: var(--dark-green);
+  font-size: 2.5rem;
+  font-weight: 500;
+  margin-bottom: 30px;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.btn {
+  background: var(--mixed-gradient);
+  color: var(--neutral-white);
+  border: none;
+  padding: 14px 30px;
+  border-radius: var(--border-radius);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  max-width: 250px;
+  margin-left: 130px;
+}
+
+/* Patient Register Form - Centered with Max Width */
+.patient-register {
+  background: var(--mixed-gradient);
+  border-radius: var(--border-radius);
+  box-shadow: 0 8px 20px var(--shadow);
+  padding: 30px;
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  color: var(--neutral-white);
+}
+
+.patient-register::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.patient-register h2 {
+  color: var(--neutral-white);
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.patient-register form {
+  display: grid;
+  gap: 20px;
+}
+
+/* Form Labels */
+.patient-register .form-label {
+  color: var(--neutral-white);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* Custom Input Fields */
+.patient-register input,
+.patient-register select,
+.patient-register textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--accent-orange);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  transition: var(--transition);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--dark-green);
+  box-sizing: border-box;
+}
+
+.patient-register input:focus,
+.patient-register select:focus,
+.patient-register textarea:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5), 0 0 10px rgba(255, 152, 0, 0.5);
+  outline: none;
+}
+
+.patient-register input::placeholder {
+  color: #888;
+  font-style: italic;
+}
+
+/* Buttons - Centered and Proper Width */
+.patient-register button {
+  background: var(--mixed-gradient);
+  color: var(--neutral-white);
+  border: none;
+  padding: 14px 30px;
+  border-radius: var(--border-radius);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.patient-register button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.patient-register button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.patient-register button:hover {
+  background: linear-gradient(45deg, var(--accent-orange), var(--primary-green));
+  transform: scale(1.02);
+  box-shadow: 0 5px 15px var(--shadow);
+}
+
+/* Patient Cards - Full Width */
+.patient-card {
+  background: linear-gradient(135deg, var(--light-green) 0%, rgba(255, 152, 0, 0.1) 100%);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px var(--shadow);
+  padding: 20px;
+  margin-bottom: 15px;
+  border-left: 5px solid var(--mixed-gradient);
+  transition: var(--transition);
+  position: relative;
+  width: 100%;
+}
+
+.patient-card:hover {
+  transform: translateX(10px);
+  box-shadow: 0 6px 18px var(--shadow);
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, var(--accent-orange) 100%);
+}
+
+.patient-card h3 {
+  color: var(--dark-green);
+  margin-bottom: 10px;
+}
+
+.patient-card p {
+  color: #555;
+  margin: 5px 0;
+}
+
+/* Tables - Full Width */
+.patient-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: var(--neutral-white);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.patient-table th,
+.patient-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--light-green);
+}
+
+.patient-table th {
+  background: var(--mixed-gradient);
+  color: var(--neutral-white);
+  font-weight: 600;
+}
+
+.patient-table tr:nth-child(even) {
+  background: linear-gradient(90deg, var(--light-green) 0%, rgba(255, 152, 0, 0.05) 100%);
+}
+
+.patient-table tr:hover {
+  background: linear-gradient(90deg, rgba(76, 175, 80, 0.1) 0%, var(--accent-orange) 100%);
+  transform: scale(1.01);
+}
+
+/* Alerts/Notifications */
+.alert {
+  background: var(--mixed-gradient);
+  color: var(--neutral-white);
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  animation: slideIn 0.5s ease-out;
+  width: 100%;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .patient-page {
+    padding: 10px;
+  }
+  .patient-register {
+    padding: 20px;
+    max-width: 100%;
+  }
+  .patient-table th,
+  .patient-table td {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+}

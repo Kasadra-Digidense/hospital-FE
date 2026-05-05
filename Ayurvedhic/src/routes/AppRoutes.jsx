@@ -3,6 +3,7 @@ import Home from "../pages/Home";
 import DashBoard from "../pages/DashBoard";
 import Login from "../pages/Login";
 import Sidebar from "../layouts/Sidebar";
+import PatientRegister from "../pages/PatientRegister";
 
 const AppRoutes = () => {
   return (
@@ -11,6 +12,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route element={<Sidebar />}>
         <Route path="/dashboard" element={<DashBoard />} />
+        <Route path="/patient-register" element={<PatientRegister />} />
       </Route>
     </Routes>
   );
