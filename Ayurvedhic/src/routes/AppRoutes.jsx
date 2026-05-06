@@ -4,15 +4,18 @@ import DashBoard from "../pages/DashBoard";
 import Login from "../pages/Login";
 import Sidebar from "../layouts/Sidebar";
 import PatientRegister from "../pages/PatientRegister";
+import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
-      <Route element={<Sidebar />}>
-        <Route path="/dashboard" element={<DashBoard />} />
-        <Route path="/patient-register" element={<PatientRegister />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<Sidebar />}>
+          <Route path="/dashboard" element={<DashBoard />} />
+          <Route path="/patient-register" element={<PatientRegister />} />
+        </Route>
       </Route>
     </Routes>
   );

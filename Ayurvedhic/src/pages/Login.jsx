@@ -1,14 +1,52 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import logo from "../assets/ayur_logo.png";
 import "../styles/pages/Login.css";
+import { clearAuthError, loginUser } from "../features/authSlice";
 
 const Login = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { user, status, error } = useSelector((state) => state.auth);
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  });
 
-  const handleSubmit = (event) => {
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate, user]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearAuthError());
+    };
+  }, [dispatch]);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      [name]: value,
+    }));
+
+    if (error) {
+      dispatch(clearAuthError());
+    }
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    navigate("/dashboard");
+
+    const resultAction = await dispatch(loginUser(formData));
+
+    if (loginUser.fulfilled.match(resultAction)) {
+      navigate("/dashboard", { replace: true });
+    }
   };
 
   return (
@@ -42,14 +80,30 @@ const Login = () => {
 
           <form className="login-form" onSubmit={handleSubmit}>
             <label className="login-field">
-              <span>Email Address</span>
-              <input type="email" placeholder="doctor@anjaneyam.com" required />
+              <span>Username</span>
+              <input
+                type="text"
+                name="username"
+                placeholder="Enter your username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+              />
             </label>
 
             <label className="login-field">
               <span>Password</span>
-              <input type="password" placeholder="Enter your password" required />
+              <input
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
             </label>
+
+            {error ? <p className="login-error-message">{error}</p> : null}
 
             <div className="login-form-row">
               <label className="login-checkbox">
@@ -61,8 +115,8 @@ const Login = () => {
               </button>
             </div>
 
-            <button type="submit" className="login-submit-btn">
-              Login
+            <button type="submit" className="login-submit-btn" disabled={status === "loading"}>
+              {status === "loading" ? "Logging in..." : "Login"}
             </button>
           </form>
 

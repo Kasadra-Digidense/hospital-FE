@@ -1,9 +1,20 @@
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import ayurLogo from "../assets/ayur_logo.png";
 import "../styles/layouts/Sidebar.css";
+import { logoutUser } from "../features/authSlice";
 
 const Sidebar = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="app-layout">
       {/* Sidebar container */}
@@ -39,10 +50,10 @@ const Sidebar = () => {
 
         {/* Logout at the end */}
         <div className="sidebar-footer-menu">
-          <NavLink to="/logout" className="sidebar-item sidebar-logout">
+          <button type="button" className="sidebar-item sidebar-logout" onClick={handleLogout}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             <p>Logout</p>
-          </NavLink>
+          </button>
         </div>
 
         {/* Sidebar Decoration */}
