@@ -15,12 +15,6 @@ const Login = () => {
   });
 
   useEffect(() => {
-    if (user) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [navigate, user]);
-
-  useEffect(() => {
     return () => {
       dispatch(clearAuthError());
     };
