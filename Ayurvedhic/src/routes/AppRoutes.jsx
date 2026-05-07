@@ -4,6 +4,7 @@ import DashBoard from "../pages/DashBoard";
 import Login from "../pages/Login";
 import Sidebar from "../layouts/Sidebar";
 import PatientRegister from "../pages/PatientRegister";
+import Invoice from "../pages/Invoice";
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -15,6 +16,7 @@ const AppRoutes = () => {
         <Route element={<Sidebar />}>
           <Route path="/dashboard" element={<DashBoard />} />
           <Route path="/patient-register" element={<PatientRegister />} />
+          <Route path="/invoice" element={<Invoice />} />
         </Route>
       </Route>
     </Routes>

@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/pages/DashBoard.css';
 
 const DashBoard = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="dashboard-container">
       <h1 className="dashboard-title">Dashboard</h1>
@@ -45,7 +48,10 @@ const DashBoard = () => {
             <div className="dashboard-card-content">
               <h3 className="dashboard-card-title dashboard-text-orange">Create Invoice</h3>
               <p className="dashboard-card-desc">Generate invoice for patient treatment</p>
-              <button className="dashboard-btn dashboard-btn-orange">
+              <button
+                className="dashboard-btn dashboard-btn-orange"
+                onClick={() => navigate('/invoice')}
+              >
                 Create Invoice
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="dashboard-btn-icon"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
               </button>

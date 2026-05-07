@@ -131,6 +131,35 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.login-password-wrapper {
+  position: relative;
+}
+
+.login-password-wrapper input {
+  width: 100%;
+  padding-right: 56px;
+  box-sizing: border-box;
+}
+
+.login-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: #1f7a4d;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-password-toggle svg {
+  display: block;
+}
+
 .login-field input:focus {
   border-color: #1f7a4d;
   box-shadow: 0 0 0 4px rgba(31, 122, 77, 0.12);
@@ -174,6 +203,8 @@
   background: #1f7a4d;
   color: #ffffff;
   padding: 15px 18px;
+  width: min(150px, 100%);
+  align-self: center;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
