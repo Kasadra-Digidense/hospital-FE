@@ -1,619 +1,1102 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import "../styles/pages/Invoice.css";
 import ayurLogo from "../assets/ayur_logo.png";
+
+// Constants for Dropdowns
+const TREATMENT_OPTIONS = [
+  { name: "ABHYANGAM", rate: 400 },
+  { name: "BANDANAM", rate: 250 },
+  { name: "LEPANAM", rate: 300 },
+  { name: "ENNAKIZHI", rate: 350 },
+  { name: "PIZHICHIL", rate: 1200 },
+  { name: "SIRODHARA", rate: 800 },
+  { name: "UDVARTHANAM", rate: 600 },
+  { name: "NASYAM", rate: 200 },
+];
+
+const ROOM_OPTIONS = [
+  { name: "ROOM - 01", rate: 500 },
+  { name: "ROOM - 02", rate: 500 },
+  { name: "ROOM - 03", rate: 500 },
+  { name: "ROOM - 04", rate: 500 },
+  { name: "ROOM - 05", rate: 500 },
+  { name: "ROOM - 06", rate: 600 },
+  { name: "ROOM - 07", rate: 600 },
+  { name: "ROOM - 08 A", rate: 700 },
+  { name: "ROOM - 08 B", rate: 700 },
+  { name: "ROOM - 11 A", rate: 800 },
+  { name: "ROOM - 11 B", rate: 800 },
+  { name: "DELUXE - 1", rate: 1200 },
+  { name: "DELUXE - 2", rate: 1200 },
+];
+
+const ADDITIONAL_CHARGE_TYPES = [
+  "Doctor Fee",
+  "Nurse Fee",
+  "Consumables",
+  "Registration Fee",
+  "Miscellaneous",
+];
+
+const PAYMENT_METHODS = ["Cash", "UPI", "Card"];
+const ROOM_TYPES = ["Non AC Big", "Non AC Small", "AC Deluxe", "General Ward"];
+const DOCTORS = ["DR SANAL", "DR ANJALI", "DR KRISHNA"];
+
+const MOCK_PATIENTS = [
+  {
+    id: 1,
+    name: "SHOBHA",
+    mrd: "22027",
+    ip: "2604/91",
+    age: "48",
+    gender: "FEMALE",
+    address: "KOUSALYAM, AIGOOR, KODAGU, KARNATAKA",
+  },
+  {
+    id: 2,
+    name: "RAJESH",
+    mrd: "22028",
+    ip: "2605/92",
+    age: "35",
+    gender: "MALE",
+    address: "Kannur, Kerala",
+  },
+];
 
 const Invoice = () => {
   const [activeStep, setActiveStep] = useState(1);
   const [isPrintView, setIsPrintView] = useState(false);
 
-  const [billData, setBillData] = useState({
-    patientName: "SHOBHA",
-    address:
-      "W/O V K SREEJITH, KOUSALYAM, AIGOOR, VILLAGE SOMWARPET, TALUK, KODAGU, DT KARNATAKA",
-    age: "48",
-    gender: "FEMALE",
-    mrdNo: "22027",
-    ipNo: "2604/91",
-    billNo: "24",
-    roomType: "Non AC Big",
-    admissionDate: "19/04/2026",
-    dischargeDate: "02/05/2026",
-    roomNo: "ROOM - 11 A",
-    consultant: "DR SANAL",
-    date: "02/05/2026",
-    days: "14",
-    advancePaid: 10000.0,
-    amountPaidUPI: 0,
-    extrasRoundOff: 0.0,
-    registrationFees: 500.0,
-    nurseFee: 2100.0,
-    doctorsFee: 2800.0,
-    consumables: 160.0,
+  // PAGE 1: Patient Data
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [patientSearch, setPatientSearch] = useState("");
+  const [showPatientList, setShowPatientList] = useState(false);
+
+  // PAGE 2: Admission Data
+  const [admissionData, setAdmissionData] = useState({
+    admissionDate: "",
+    dischargeDate: "",
+    consultant: DOCTORS[0],
+    roomType: ROOM_TYPES[0],
+    roomNumber: "ROOM - 01",
+    billNo: "2024/001",
   });
 
-  const [roomRents, setRoomRents] = useState([
-    {
-      description: "Room Rent [ROOM - 8 A]",
-      qty: 3,
-      rate: 466.67,
-      amount: 1400.0,
-    },
-    {
-      description: "Room Rent [ROOM - 11 A]",
-      qty: 3,
-      rate: 600.0,
-      amount: 1800.0,
-    },
-    {
-      description: "Room Rent [ROOM - 11 A]",
-      qty: 8,
-      rate: 700.0,
-      amount: 5600.0,
-    },
+  // PAGE 3: Room Charges
+  const [roomCharges, setRoomCharges] = useState([
+    { room: "ROOM - 01", days: 0, rate: 0, amount: 0, showList: false },
   ]);
 
-  const [treatments, setTreatments] = useState([
-    {
-      description: "ABHYANGAM - DS",
-      qty: "14 Nos",
-      rate: 400.0,
-      amount: 5600.0,
-    },
-    {
-      description: "BANDANAM - BK",
-      qty: "12 Nos",
-      rate: 250.0,
-      amount: 3000.0,
-    },
-    {
-      description: "ENNAKIZHI - DS",
-      qty: "7 Nos",
-      rate: 350.0,
-      amount: 2450.0,
-    },
+  // PAGE 4: Treatment Charges
+  const [treatmentCharges, setTreatmentCharges] = useState([
+    { treatment: "", qty: 0, rate: 0, amount: 0, showList: false },
   ]);
 
-  const roomTotal = roomRents.reduce((sum, item) => sum + item.amount, 0);
-  const treatmentTotal = treatments.reduce((sum, item) => sum + item.amount, 0);
-  const otherTotal =
-    parseFloat(billData.consumables) +
-    parseFloat(billData.doctorsFee) +
-    parseFloat(billData.nurseFee) +
-    parseFloat(billData.registrationFees) +
-    parseFloat(billData.extrasRoundOff);
+  // PAGE 5: Additional Charges
+  const [additionalCharges, setAdditionalCharges] = useState([
+    { type: "Doctor Fee", amount: 0 },
+  ]);
 
-  const grossTotal = roomTotal + treatmentTotal + otherTotal;
-  const balanceAmount =
-    grossTotal - billData.advancePaid - billData.amountPaidUPI;
+  // PAGE 6: Payment Details
+  const [payments, setPayments] = useState([{ method: "Cash", amount: 0 }]);
+  const [advancePaid, setAdvancePaid] = useState(0);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setBillData({ ...billData, [name]: value });
-  };
+  // LOGIC: Days Calculation
+  const calculatedDays = useMemo(() => {
+    if (!admissionData.admissionDate || !admissionData.dischargeDate) return 0;
+    const start = new Date(admissionData.admissionDate);
+    const end = new Date(admissionData.dischargeDate);
+    const diffTime = Math.abs(end - start);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 0;
+  }, [admissionData.admissionDate, admissionData.dischargeDate]);
 
-  const updateRoomRow = (index, field, value) => {
-    const newRows = [...roomRents];
-    newRows[index][field] = value;
-    if (field === "qty" || field === "rate") {
-      newRows[index].amount =
-        parseFloat(newRows[index].qty || 0) *
-        parseFloat(newRows[index].rate || 0);
+  useEffect(() => {
+    if (roomCharges.length === 1 && roomCharges[0].days === 0) {
+      handleRoomRowChange(0, "days", calculatedDays);
     }
-    setRoomRents(newRows);
-  };
+  }, [calculatedDays]);
 
-  const updateTreatmentRow = (index, field, value) => {
-    const newRows = [...treatments];
-    newRows[index][field] = value;
-    if (field === "qty" || field === "rate") {
-      const numericQty =
-        parseFloat(value.toString().replace(/[^0-9.]/g, "")) || 0;
-      if (field === "qty") {
-        newRows[index].amount =
-          numericQty * parseFloat(newRows[index].rate || 0);
-      } else {
-        const currentQty =
-          parseFloat(newRows[index].qty.toString().replace(/[^0-9.]/g, "")) ||
-          0;
-        newRows[index].amount = currentQty * parseFloat(value || 0);
-      }
-    }
-    setTreatments(newRows);
-  };
+  // CALCULATIONS
+  const totals = useMemo(() => {
+    const roomTotal = roomCharges.reduce(
+      (sum, r) => sum + (parseFloat(r.amount) || 0),
+      0,
+    );
+    const treatmentTotal = treatmentCharges.reduce(
+      (sum, t) => sum + (parseFloat(t.amount) || 0),
+      0,
+    );
+    const extraTotal = additionalCharges.reduce(
+      (sum, e) => sum + (parseFloat(e.amount) || 0),
+      0,
+    );
+    const gross = roomTotal + treatmentTotal + extraTotal;
+    const currentPaid = payments.reduce(
+      (sum, p) => sum + (parseFloat(p.amount) || 0),
+      0,
+    );
+    const totalPaid = currentPaid + parseFloat(advancePaid || 0);
+    const balance = gross - totalPaid;
 
-  const nextStep = () => setActiveStep((prev) => Math.min(prev + 1, 4));
+    return {
+      roomTotal,
+      treatmentTotal,
+      extraTotal,
+      gross,
+      currentPaid,
+      totalPaid,
+      balance,
+    };
+  }, [roomCharges, treatmentCharges, additionalCharges, payments, advancePaid]);
+
+  // HANDLERS
+  const nextStep = () => setActiveStep((prev) => Math.min(prev + 1, 8));
   const prevStep = () => setActiveStep((prev) => Math.max(prev - 1, 1));
 
+  const handlePatientSelect = (p) => {
+    setSelectedPatient(p);
+    setPatientSearch(p.name);
+    setShowPatientList(false);
+  };
+
+  const handleRoomRowChange = (index, field, value) => {
+    const newRows = [...roomCharges];
+    newRows[index][field] = value;
+    if (field === "days" || field === "rate") {
+      newRows[index].amount =
+        (parseFloat(newRows[index].days) || 0) *
+        (parseFloat(newRows[index].rate) || 0);
+    }
+    setRoomCharges(newRows);
+  };
+
+  const handleTreatmentRowChange = (index, field, value) => {
+    const newRows = [...treatmentCharges];
+    newRows[index][field] = value;
+
+    if (field === "treatment") {
+      const option = TREATMENT_OPTIONS.find((o) => o.name === value);
+      if (option) {
+        newRows[index].rate = option.rate;
+        newRows[index].amount =
+          (parseFloat(newRows[index].qty) || 0) * option.rate;
+      }
+    }
+    if (field === "qty" || field === "rate") {
+      newRows[index].amount =
+        (parseFloat(newRows[index].qty) || 0) *
+        (parseFloat(newRows[index].rate) || 0);
+    }
+    setTreatmentCharges(newRows);
+  };
+
+  const filteredPatients = MOCK_PATIENTS.filter(
+    (p) =>
+      p.name.toLowerCase().includes(patientSearch.toLowerCase()) ||
+      p.mrd.includes(patientSearch) ||
+      p.ip.includes(patientSearch),
+  );
+
   return (
-    <div className={`invoice-container ${isPrintView ? "print-mode" : ""}`}>
-      {!isPrintView ? (
+    <div
+      className={`invoice-container ${activeStep === 8 ? "print-ready" : ""}`}
+      onClick={() => {
+        setShowPatientList(false);
+        setRoomCharges((prev) => prev.map((r) => ({ ...r, showList: false })));
+        setTreatmentCharges((prev) =>
+          prev.map((t) => ({ ...t, showList: false })),
+        );
+      }}
+    >
+      {activeStep < 8 && (
         <div className="invoice-modern-shell">
-          {/* Header */}
+          {/* Top Header */}
           <div className="invoice-top-bar">
             <div className="title-group">
-              <h1>Invoice Generator</h1>
-              <p>Create professional discharge bills for patients</p>
+              <h1>Invoice Wizard</h1>
+              <p>Follow the steps to generate professional bill</p>
             </div>
-            <button
-              className="preview-btn-modern"
-              onClick={() => setIsPrintView(true)}
-            >
-              <span>Preview & Print</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                <rect x="6" y="14" width="12" height="8"></rect>
-              </svg>
-            </button>
+            <div className="step-progress-pill">Step {activeStep} of 7</div>
           </div>
 
           <div className="invoice-main-layout">
-            {/* Step Sidebar */}
+            {/* Step Navigation Sidebar */}
             <aside className="invoice-steps-sidebar">
-              <div
-                className={`step-item ${activeStep === 1 ? "active" : activeStep > 1 ? "completed" : ""}`}
-                onClick={() => setActiveStep(1)}
-              >
-                <div className="step-number">{activeStep > 1 ? "✓" : "1"}</div>
-                <div className="step-info">
-                  <span className="step-label">Patient Info</span>
-                  <span className="step-desc">Basic details & Address</span>
+              {[
+                { n: 1, label: "Select Patient", desc: "Search & Verify" },
+                { n: 2, label: "Stay Details", desc: "Dates & Doctor" },
+                { n: 3, label: "Room Rents", desc: "Stay charges" },
+                { n: 4, label: "Treatments", desc: "Procedures" },
+                { n: 5, label: "Extra Charges", desc: "Misc fees" },
+                { n: 6, label: "Payments", desc: "Cash/UPI/Balance" },
+                { n: 7, label: "Review", desc: "Final Check" },
+              ].map((s) => (
+                <div
+                  key={s.n}
+                  className={`step-item ${activeStep === s.n ? "active" : activeStep > s.n ? "completed" : ""}`}
+                  onClick={() => setActiveStep(s.n)}
+                >
+                  <div className="step-number">
+                    {activeStep > s.n ? "✓" : s.n}
+                  </div>
+                  <div className="step-info">
+                    <span className="step-label">{s.label}</span>
+                    <span className="step-desc">{s.desc}</span>
+                  </div>
                 </div>
-              </div>
-              <div
-                className={`step-item ${activeStep === 2 ? "active" : activeStep > 2 ? "completed" : ""}`}
-                onClick={() => setActiveStep(2)}
-              >
-                <div className="step-number">{activeStep > 2 ? "✓" : "2"}</div>
-                <div className="step-info">
-                  <span className="step-label">Stay Details</span>
-                  <span className="step-desc">Room & Admission</span>
-                </div>
-              </div>
-              <div
-                className={`step-item ${activeStep === 3 ? "active" : activeStep > 3 ? "completed" : ""}`}
-                onClick={() => setActiveStep(3)}
-              >
-                <div className="step-number">{activeStep > 3 ? "✓" : "3"}</div>
-                <div className="step-info">
-                  <span className="step-label">Charges</span>
-                  <span className="step-desc">Rents & Treatments</span>
-                </div>
-              </div>
-              <div
-                className={`step-item ${activeStep === 4 ? "active" : ""}`}
-                onClick={() => setActiveStep(4)}
-              >
-                <div className="step-number">4</div>
-                <div className="step-info">
-                  <span className="step-label">Payment</span>
-                  <span className="step-desc">Advance & Balance</span>
-                </div>
-              </div>
+              ))}
             </aside>
 
-            {/* Form Content */}
+            {/* Page Content Rendering */}
             <main className="invoice-form-content">
+              {/* PAGE 1: Select Patient */}
               {activeStep === 1 && (
                 <div className="step-content">
-                  <h2>Patient Information</h2>
-                  <div className="modern-field">
-                    <label>Full Name</label>
-                    <input
-                      type="text"
-                      name="patientName"
-                      value={billData.patientName}
-                      onChange={handleInputChange}
-                      placeholder="Ex: John Doe"
-                    />
-                  </div>
-                  <div className="modern-field">
-                    <label>Permanent Address</label>
-                    <textarea
-                      name="address"
-                      value={billData.address}
-                      onChange={handleInputChange}
-                      placeholder="Street, Village, State..."
-                    ></textarea>
-                  </div>
-                  <div className="field-row">
-                    <div className="modern-field">
-                      <label>Age</label>
+                  <h2>Select Patient</h2>
+                  <div
+                    className="searchable-dropdown"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <label>Patient Search</label>
+                    <div
+                      className={`dropdown-input-wrapper ${showPatientList ? "open" : ""}`}
+                    >
                       <input
-                        type="number"
-                        name="age"
-                        value={billData.age}
-                        onChange={handleInputChange}
+                        type="text"
+                        placeholder="Search by Name, MRD or IP Number..."
+                        value={patientSearch}
+                        onFocus={() => setShowPatientList(true)}
+                        onChange={(e) => {
+                          setPatientSearch(e.target.value);
+                          setShowPatientList(true);
+                        }}
                       />
-                    </div>
-                    <div className="modern-field">
-                      <label>Gender</label>
-                      <select
-                        name="gender"
-                        value={billData.gender}
-                        onChange={handleInputChange}
-                      >
-                        <option value="MALE">Male</option>
-                        <option value="FEMALE">Female</option>
-                        <option value="OTHER">Other</option>
-                      </select>
+                      <div className="dropdown-chevron">▼</div>
+                      {showPatientList && (
+                        <div className="dropdown-list">
+                          {(patientSearch
+                            ? filteredPatients
+                            : MOCK_PATIENTS
+                          ).map((p) => (
+                            <div
+                              key={p.id}
+                              className="dropdown-item"
+                              onClick={() => handlePatientSelect(p)}
+                            >
+                              <span>{p.name}</span>
+                              <small>
+                                MRD: {p.mrd} | IP: {p.ip}
+                              </small>
+                            </div>
+                          ))}
+                          {(patientSearch ? filteredPatients : MOCK_PATIENTS)
+                            .length === 0 && (
+                            <div className="dropdown-item">
+                              <small>No patients found</small>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
+
+                  {selectedPatient && (
+                    <div className="patient-summary-card animate-fade-in">
+                      <div className="card-header">
+                        <h3>Patient Summary</h3>
+                        <span className="badge">Verified</span>
+                      </div>
+                      <div className="card-grid">
+                        <div className="info-grp">
+                          <strong>Name:</strong>{" "}
+                          <span>{selectedPatient.name}</span>
+                        </div>
+                        <div className="info-grp">
+                          <strong>MRD No:</strong>{" "}
+                          <span>{selectedPatient.mrd}</span>
+                        </div>
+                        <div className="info-grp">
+                          <strong>IP No:</strong>{" "}
+                          <span>{selectedPatient.ip}</span>
+                        </div>
+                        <div className="info-grp">
+                          <strong>Age/Gender:</strong>{" "}
+                          <span>
+                            {selectedPatient.age} / {selectedPatient.gender}
+                          </span>
+                        </div>
+                        <div className="info-grp full">
+                          <strong>Address:</strong>{" "}
+                          <span>{selectedPatient.address}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
+              {/* PAGE 2: Admission Details */}
               {activeStep === 2 && (
                 <div className="step-content">
-                  <h2>Stay & Hospital Details</h2>
-                  <div className="field-row">
-                    <div className="modern-field">
-                      <label>MRD No</label>
-                      <input
-                        type="text"
-                        name="mrdNo"
-                        value={billData.mrdNo}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="modern-field">
-                      <label>IP No</label>
-                      <input
-                        type="text"
-                        name="ipNo"
-                        value={billData.ipNo}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="modern-field">
-                      <label>Bill No</label>
-                      <input
-                        type="text"
-                        name="billNo"
-                        value={billData.billNo}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-                  <div className="field-row">
-                    <div className="modern-field">
-                      <label>Room Type</label>
-                      <input
-                        type="text"
-                        name="roomType"
-                        value={billData.roomType}
-                        onChange={handleInputChange}
-                      />
-                    </div>
+                  <h2>Admission & Stay Details</h2>
+                  <div className="field-grid">
                     <div className="modern-field">
                       <label>Admission Date</label>
                       <input
                         type="date"
-                        name="admissionDate"
-                        value={billData.admissionDate}
-                        onChange={handleInputChange}
+                        value={admissionData.admissionDate}
+                        onChange={(e) =>
+                          setAdmissionData({
+                            ...admissionData,
+                            admissionDate: e.target.value,
+                          })
+                        }
                       />
                     </div>
-                  </div>
-                  <div className="field-row">
+                    <div className="modern-field">
+                      <label>Discharge Date</label>
+                      <input
+                        type="date"
+                        value={admissionData.dischargeDate}
+                        onChange={(e) =>
+                          setAdmissionData({
+                            ...admissionData,
+                            dischargeDate: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
                     <div className="modern-field">
                       <label>Consultant Doctor</label>
+                      <select
+                        value={admissionData.consultant}
+                        onChange={(e) =>
+                          setAdmissionData({
+                            ...admissionData,
+                            consultant: e.target.value,
+                          })
+                        }
+                      >
+                        {DOCTORS.map((d) => (
+                          <option key={d} value={d}>
+                            {d}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="modern-field">
+                      <label>Room Type</label>
+                      <select
+                        value={admissionData.roomType}
+                        onChange={(e) =>
+                          setAdmissionData({
+                            ...admissionData,
+                            roomType: e.target.value,
+                          })
+                        }
+                      >
+                        {ROOM_TYPES.map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="modern-field">
+                      <label>Room Number</label>
                       <input
                         type="text"
-                        name="consultant"
-                        value={billData.consultant}
-                        onChange={handleInputChange}
+                        value={admissionData.roomNumber}
+                        onChange={(e) =>
+                          setAdmissionData({
+                            ...admissionData,
+                            roomNumber: e.target.value,
+                          })
+                        }
                       />
                     </div>
-                    <div className="modern-field">
-                      <label>Stay Duration (Days)</label>
-                      <input
-                        type="number"
-                        name="days"
-                        value={billData.days}
-                        onChange={handleInputChange}
-                      />
+                    <div className="modern-field readonly">
+                      <label>Calculated Days</label>
+                      <input type="text" value={calculatedDays} readOnly />
                     </div>
                   </div>
                 </div>
               )}
 
+              {/* PAGE 3: Room Charges */}
               {activeStep === 3 && (
                 <div className="step-content">
-                  <h2>Billing Items</h2>
-
-                  <div className="billing-section">
-                    <div className="section-header">
-                      <h3>Room Rents</h3>
-                      <button
-                        className="add-btn"
-                        onClick={() =>
-                          setRoomRents([
-                            ...roomRents,
-                            { description: "", qty: 0, rate: 0, amount: 0 },
-                          ])
-                        }
-                      >
-                        + Add Room
-                      </button>
-                    </div>
-                    {roomRents.map((row, index) => (
-                      <div className="dynamic-row" key={index}>
-                        <input
-                          className="flex-2"
-                          type="text"
-                          placeholder="Description"
-                          value={row.description}
-                          onChange={(e) =>
-                            updateRoomRow(index, "description", e.target.value)
-                          }
-                        />
-                        <input
-                          className="flex-1"
-                          type="number"
-                          placeholder="Qty"
-                          value={row.qty}
-                          onChange={(e) =>
-                            updateRoomRow(index, "qty", e.target.value)
-                          }
-                        />
-                        <input
-                          className="flex-1"
-                          type="number"
-                          placeholder="Rate"
-                          value={row.rate}
-                          onChange={(e) =>
-                            updateRoomRow(index, "rate", e.target.value)
-                          }
-                        />
-                        <div className="row-amount">
-                          ₹{row.amount.toFixed(0)}
-                        </div>
-                        <button
-                          className="del-btn"
-                          onClick={() =>
-                            setRoomRents(
-                              roomRents.filter((_, i) => i !== index),
-                            )
-                          }
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
+                  <div className="section-header-row">
+                    <h2>Room & Accomodation</h2>
+                    <button
+                      className="add-row-btn"
+                      onClick={() =>
+                        setRoomCharges([
+                          ...roomCharges,
+                          {
+                            room: "",
+                            days: 0,
+                            rate: 0,
+                            amount: 0,
+                            showList: false,
+                          },
+                        ])
+                      }
+                    >
+                      + Add Room
+                    </button>
                   </div>
-
-                  <div className="billing-section">
-                    <div className="section-header">
-                      <h3>Treatments</h3>
-                      <button
-                        className="add-btn"
-                        onClick={() =>
-                          setTreatments([
-                            ...treatments,
-                            { description: "", qty: "", rate: 0, amount: 0 },
-                          ])
-                        }
-                      >
-                        + Add Treatment
-                      </button>
-                    </div>
-                    {treatments.map((row, index) => (
-                      <div className="dynamic-row" key={index}>
-                        <input
-                          className="flex-2"
-                          type="text"
-                          placeholder="Treatment Name"
-                          value={row.description}
-                          onChange={(e) =>
-                            updateTreatmentRow(
-                              index,
-                              "description",
-                              e.target.value,
-                            )
-                          }
-                        />
-                        <input
-                          className="flex-1"
-                          type="text"
-                          placeholder="Qty (e.g. 10 Nos)"
-                          value={row.qty}
-                          onChange={(e) =>
-                            updateTreatmentRow(index, "qty", e.target.value)
-                          }
-                        />
-                        <input
-                          className="flex-1"
-                          type="number"
-                          placeholder="Rate"
-                          value={row.rate}
-                          onChange={(e) =>
-                            updateTreatmentRow(index, "rate", e.target.value)
-                          }
-                        />
-                        <div className="row-amount">
-                          ₹{row.amount.toFixed(0)}
-                        </div>
-                        <button
-                          className="del-btn"
-                          onClick={() =>
-                            setTreatments(
-                              treatments.filter((_, i) => i !== index),
-                            )
-                          }
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
+                  <div className="dynamic-table-container">
+                    <table className="wizard-table">
+                      <thead>
+                        <tr>
+                          <th>Room/Bed</th>
+                          <th>Days</th>
+                          <th>Rate</th>
+                          <th>Amount</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {roomCharges.map((row, index) => (
+                          <tr key={index}>
+                            <td
+                              className="relative"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div
+                                className={`dropdown-input-wrapper ${row.showList ? "open" : ""}`}
+                              >
+                                <input
+                                  type="text"
+                                  value={row.room}
+                                  placeholder="Search Room..."
+                                  onFocus={() => {
+                                    const newRows = [...roomCharges];
+                                    newRows[index].showList = true;
+                                    setRoomCharges(newRows);
+                                  }}
+                                  onChange={(e) =>
+                                    handleRoomRowChange(
+                                      index,
+                                      "room",
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                                <div className="dropdown-chevron">▼</div>
+                                {row.showList && (
+                                  <div className="table-dropdown">
+                                    {(row.room
+                                      ? ROOM_OPTIONS.filter((opt) =>
+                                          opt.name
+                                            .toLowerCase()
+                                            .includes(row.room.toLowerCase()),
+                                        )
+                                      : ROOM_OPTIONS
+                                    ).map((opt) => (
+                                      <div
+                                        key={opt.name}
+                                        className="table-dropdown-item"
+                                        onClick={() => {
+                                          const newRows = [...roomCharges];
+                                          newRows[index].room = opt.name;
+                                          newRows[index].rate = opt.rate;
+                                          newRows[index].amount =
+                                            newRows[index].days * opt.rate;
+                                          newRows[index].showList = false;
+                                          setRoomCharges(newRows);
+                                        }}
+                                      >
+                                        {opt.name}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                value={row.days}
+                                onChange={(e) =>
+                                  handleRoomRowChange(
+                                    index,
+                                    "days",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                value={row.rate}
+                                onChange={(e) =>
+                                  handleRoomRowChange(
+                                    index,
+                                    "rate",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input type="text" value={row.amount} readOnly />
+                            </td>
+                            <td>
+                              <button
+                                className="row-del-btn"
+                                onClick={() =>
+                                  setRoomCharges(
+                                    roomCharges.filter((_, i) => i !== index),
+                                  )
+                                }
+                              >
+                                ✕
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="table-total-row">
+                          <td colSpan="3">Room Total</td>
+                          <td colSpan="2">₹{totals.roomTotal.toFixed(2)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}
 
+              {/* PAGE 4: Treatment Charges */}
               {activeStep === 4 && (
                 <div className="step-content">
-                  <h2>Final Payment & Other Fees</h2>
-                  <div className="field-row">
-                    <div className="modern-field">
-                      <label>Doctor's Fee</label>
-                      <input
-                        type="number"
-                        name="doctorsFee"
-                        value={billData.doctorsFee}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="modern-field">
-                      <label>Nurse Fee</label>
-                      <input
-                        type="number"
-                        name="nurseFee"
-                        value={billData.nurseFee}
-                        onChange={handleInputChange}
-                      />
-                    </div>
+                  <div className="section-header-row">
+                    <h2>Treatments & Procedures</h2>
+                    <button
+                      className="add-row-btn"
+                      onClick={() =>
+                        setTreatmentCharges([
+                          ...treatmentCharges,
+                          {
+                            treatment: "",
+                            qty: 0,
+                            rate: 0,
+                            amount: 0,
+                            showList: false,
+                          },
+                        ])
+                      }
+                    >
+                      + Add Treatment
+                    </button>
                   </div>
-                  <div className="field-row">
-                    <div className="modern-field">
-                      <label>Registration Fee</label>
-                      <input
-                        type="number"
-                        name="registrationFees"
-                        value={billData.registrationFees}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="modern-field">
-                      <label>Consumables</label>
-                      <input
-                        type="number"
-                        name="consumables"
-                        value={billData.consumables}
-                        onChange={handleInputChange}
-                      />
-                    </div>
+                  <div className="dynamic-table-container">
+                    <table className="wizard-table">
+                      <thead>
+                        <tr>
+                          <th>Treatment</th>
+                          <th>Qty</th>
+                          <th>Rate</th>
+                          <th>Amount</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {treatmentCharges.map((row, index) => (
+                          <tr key={index}>
+                            <td
+                              className="relative"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div
+                                className={`dropdown-input-wrapper ${row.showList ? "open" : ""}`}
+                              >
+                                <input
+                                  type="text"
+                                  value={row.treatment}
+                                  placeholder="Search Treatment..."
+                                  onFocus={() => {
+                                    const newRows = [...treatmentCharges];
+                                    newRows[index].showList = true;
+                                    setTreatmentCharges(newRows);
+                                  }}
+                                  onChange={(e) =>
+                                    handleTreatmentRowChange(
+                                      index,
+                                      "treatment",
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                                <div className="dropdown-chevron">▼</div>
+                                {row.showList && (
+                                  <div className="table-dropdown">
+                                    {(row.treatment
+                                      ? TREATMENT_OPTIONS.filter((opt) =>
+                                          opt.name
+                                            .toLowerCase()
+                                            .includes(
+                                              row.treatment.toLowerCase(),
+                                            ),
+                                        )
+                                      : TREATMENT_OPTIONS
+                                    ).map((opt) => (
+                                      <div
+                                        key={opt.name}
+                                        className="table-dropdown-item"
+                                        onClick={() => {
+                                          handleTreatmentRowChange(
+                                            index,
+                                            "treatment",
+                                            opt.name,
+                                          );
+                                          const newRows = [...treatmentCharges];
+                                          newRows[index].showList = false;
+                                          setTreatmentCharges(newRows);
+                                        }}
+                                      >
+                                        {opt.name}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                value={row.qty}
+                                onChange={(e) =>
+                                  handleTreatmentRowChange(
+                                    index,
+                                    "qty",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                value={row.rate}
+                                onChange={(e) =>
+                                  handleTreatmentRowChange(
+                                    index,
+                                    "rate",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input type="text" value={row.amount} readOnly />
+                            </td>
+                            <td>
+                              <button
+                                className="row-del-btn"
+                                onClick={() =>
+                                  setTreatmentCharges(
+                                    treatmentCharges.filter(
+                                      (_, i) => i !== index,
+                                    ),
+                                  )
+                                }
+                              >
+                                ✕
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="table-total-row">
+                          <td colSpan="3">Treatment Total</td>
+                          <td colSpan="2">
+                            ₹{totals.treatmentTotal.toFixed(2)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
-                  <hr className="divider" />
-                  <div className="field-row">
-                    <div className="modern-field highlight">
-                      <label>Total Advance Paid</label>
-                      <input
-                        type="number"
-                        name="advancePaid"
-                        value={billData.advancePaid}
-                        onChange={handleInputChange}
-                      />
+                </div>
+              )}
+
+              {/* PAGE 5: Additional Charges */}
+              {activeStep === 5 && (
+                <div className="step-content">
+                  <div className="section-header-row">
+                    <h2>Additional Fees</h2>
+                    <button
+                      className="add-row-btn"
+                      onClick={() =>
+                        setAdditionalCharges([
+                          ...additionalCharges,
+                          { type: "Miscellaneous", amount: 0 },
+                        ])
+                      }
+                    >
+                      + Add Charge
+                    </button>
+                  </div>
+                  <div className="dynamic-table-container">
+                    <table className="wizard-table">
+                      <thead>
+                        <tr>
+                          <th>Charge Type</th>
+                          <th>Amount</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {additionalCharges.map((row, index) => (
+                          <tr key={index}>
+                            <td>
+                              <select
+                                value={row.type}
+                                onChange={(e) => {
+                                  const newRows = [...additionalCharges];
+                                  newRows[index].type = e.target.value;
+                                  setAdditionalCharges(newRows);
+                                }}
+                              >
+                                {ADDITIONAL_CHARGE_TYPES.map((t) => (
+                                  <option key={t} value={t}>
+                                    {t}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                value={row.amount}
+                                onChange={(e) => {
+                                  const newRows = [...additionalCharges];
+                                  newRows[index].amount = e.target.value;
+                                  setAdditionalCharges(newRows);
+                                }}
+                              />
+                            </td>
+                            <td>
+                              <button
+                                className="row-del-btn"
+                                onClick={() =>
+                                  setAdditionalCharges(
+                                    additionalCharges.filter(
+                                      (_, i) => i !== index,
+                                    ),
+                                  )
+                                }
+                              >
+                                ✕
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* PAGE 6: Payment Details */}
+              {activeStep === 6 && (
+                <div className="step-content">
+                  <h2>Payment Information</h2>
+                  <div className="payment-layout">
+                    <div className="payment-table-side">
+                      <div className="section-header-row">
+                        <h3>Current Payments</h3>
+                        <button
+                          className="add-row-btn"
+                          onClick={() =>
+                            setPayments([
+                              ...payments,
+                              { method: "Cash", amount: 0 },
+                            ])
+                          }
+                        >
+                          + Add Method
+                        </button>
+                      </div>
+                      <table className="wizard-table">
+                        <thead>
+                          <tr>
+                            <th>Method</th>
+                            <th>Amount</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payments.map((row, index) => (
+                            <tr key={index}>
+                              <td>
+                                <select
+                                  value={row.method}
+                                  onChange={(e) => {
+                                    const newRows = [...payments];
+                                    newRows[index].method = e.target.value;
+                                    setPayments(newRows);
+                                  }}
+                                >
+                                  {PAYMENT_METHODS.map((m) => (
+                                    <option key={m} value={m}>
+                                      {m}
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td>
+                                <input
+                                  type="number"
+                                  value={row.amount}
+                                  onChange={(e) => {
+                                    const newRows = [...payments];
+                                    newRows[index].amount = e.target.value;
+                                    setPayments(newRows);
+                                  }}
+                                />
+                              </td>
+                              <td>
+                                <button
+                                  className="row-del-btn"
+                                  onClick={() =>
+                                    setPayments(
+                                      payments.filter((_, i) => i !== index),
+                                    )
+                                  }
+                                >
+                                  ✕
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                    <div className="modern-field highlight">
-                      <label>Other Payments (UPI)</label>
-                      <input
-                        type="number"
-                        name="amountPaidUPI"
-                        value={billData.amountPaidUPI}
-                        onChange={handleInputChange}
-                      />
+                    <div className="payment-summary-side">
+                      <div className="summary-card">
+                        <div className="sum-row">
+                          <span>Gross Total</span>{" "}
+                          <strong>₹{totals.gross.toFixed(2)}</strong>
+                        </div>
+                        <div className="sum-row">
+                          <span>Advance Paid</span>
+                          <input
+                            type="number"
+                            value={advancePaid}
+                            onChange={(e) => setAdvancePaid(e.target.value)}
+                          />
+                        </div>
+                        <div className="sum-row">
+                          <span>Current Payment</span>{" "}
+                          <strong>₹{totals.currentPaid.toFixed(2)}</strong>
+                        </div>
+                        <div className="sum-divider"></div>
+                        <div className="sum-row grand">
+                          <span>Balance Due</span>{" "}
+                          <strong
+                            className={totals.balance > 0 ? "due" : "settled"}
+                          >
+                            ₹{totals.balance.toFixed(2)}
+                          </strong>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Footer Navigation */}
-              <div className="form-footer-nav">
+              {/* PAGE 7: Review & Finalize */}
+              {activeStep === 7 && (
+                <div className="step-content">
+                  <div className="review-header">
+                    <h2>Review Invoice</h2>
+                    {/* <div className="review-actions">
+                                <button className="draft-btn">Save Draft</button>
+                                <button className="generate-btn" onClick={() => setActiveStep(8)}>Generate & Print</button>
+                            </div> */}
+                  </div>
+                  <div className="review-grid">
+                    <div className="review-section">
+                      <div className="section-head">
+                        <h4>Patient Info</h4>{" "}
+                        <button onClick={() => setActiveStep(1)}>Edit</button>
+                      </div>
+                      <p>
+                        <strong>{selectedPatient?.name}</strong>
+                      </p>
+                      <p>
+                        MRD: {selectedPatient?.mrd} | IP: {selectedPatient?.ip}
+                      </p>
+                    </div>
+                    <div className="review-section">
+                      <div className="section-head">
+                        <h4>Admission</h4>{" "}
+                        <button onClick={() => setActiveStep(2)}>Edit</button>
+                      </div>
+                      <p>
+                        {admissionData.admissionDate} to{" "}
+                        {admissionData.dischargeDate}
+                      </p>
+                      <p>Consultant: {admissionData.consultant}</p>
+                    </div>
+                    <div className="review-section full">
+                      <div className="section-head">
+                        <h4>Stay & Treatments</h4>{" "}
+                        <button onClick={() => setActiveStep(3)}>Edit</button>
+                      </div>
+                      <div className="review-list-grid">
+                        <div className="review-sublist">
+                          <h5>Rooms</h5>
+                          {roomCharges.map((r, i) => (
+                            <div key={i} className="review-list-item">
+                              {r.room} - {r.days} Days
+                            </div>
+                          ))}
+                        </div>
+                        <div className="review-sublist">
+                          <h5>Treatments</h5>
+                          {treatmentCharges.map((t, i) => (
+                            <div key={i} className="review-list-item">
+                              {t.treatment} x {t.qty}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="review-section">
+                      <div className="section-head">
+                        <h4>Financial Summary</h4>
+                      </div>
+                      <div className="review-sums">
+                        <div className="sum-line">
+                          <span>Rooms:</span> <span>₹{totals.roomTotal}</span>
+                        </div>
+                        <div className="sum-line">
+                          <span>Treatments:</span>{" "}
+                          <span>₹{totals.treatmentTotal}</span>
+                        </div>
+                        <div className="sum-line">
+                          <span>Extras:</span> <span>₹{totals.extraTotal}</span>
+                        </div>
+                        <div className="sum-line final">
+                          <span>Total:</span> <span>₹{totals.gross}</span>
+                        </div>
+                        <div className="sum-line balance">
+                          <span>Balance Due:</span>{" "}
+                          <span>₹{totals.balance}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP NAVIGATION FOOTER */}
+              <div className="wizard-footer no-print">
                 <button
                   className="nav-btn secondary"
-                  onClick={prevStep}
                   disabled={activeStep === 1}
+                  onClick={() => setActiveStep((prev) => prev - 1)}
                 >
-                  Previous
-                </button>
-                {activeStep < 4 ? (
-                  <button className="nav-btn primary" onClick={nextStep}>
-                    Next Step
-                  </button>
-                ) : (
-                  <button
-                    className="nav-btn success"
-                    onClick={() => setIsPrintView(true)}
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
                   >
-                    Final Preview
-                  </button>
-                )}
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                  Back
+                </button>
+
+                <div className="review-actions">
+                  {activeStep === 7 && (
+                    <button className="nav-btn draft">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                        <polyline points="17 21 17 13 7 13 7 21" />
+                        <polyline points="7 3 7 8 15 8" />
+                      </svg>
+                      Save Draft
+                    </button>
+                  )}
+
+                  {activeStep < 7 ? (
+                    <button
+                      className="nav-btn primary"
+                      onClick={() => setActiveStep((prev) => prev + 1)}
+                    >
+                      Next
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  ) : activeStep === 7 ? (
+                    <button
+                      className="nav-btn success"
+                      onClick={() => setActiveStep(8)}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                        <polyline points="13 2 13 9 20 9" />
+                      </svg>
+                      Generate & Print
+                    </button>
+                  ) : null}
+                </div>
               </div>
             </main>
-
-            {/* Live Summary Sidebar */}
-            <aside className="invoice-live-summary">
-              <h3>Live Summary</h3>
-              <div className="summary-list">
-                <div className="summary-item">
-                  <span>Room Rents</span>
-                  <span>₹{roomTotal.toFixed(0)}</span>
-                </div>
-                <div className="summary-item">
-                  <span>Treatments</span>
-                  <span>₹{treatmentTotal.toFixed(0)}</span>
-                </div>
-                <div className="summary-item">
-                  <span>Other Fees</span>
-                  <span>₹{otherTotal.toFixed(0)}</span>
-                </div>
-                <div className="summary-divider"></div>
-                <div className="summary-item total">
-                  <span>Gross Total</span>
-                  <span>₹{grossTotal.toFixed(0)}</span>
-                </div>
-                <div className="summary-item advance">
-                  <span>Total Advance</span>
-                  <span>- ₹{billData.advancePaid}</span>
-                </div>
-                <div className="summary-item balance">
-                  <span>Balance Due</span>
-                  <span
-                    className={balanceAmount > 0 ? "due-text" : "paid-text"}
-                  >
-                    ₹{balanceAmount.toFixed(0)}
-                  </span>
-                </div>
-              </div>
-            </aside>
           </div>
         </div>
-      ) : (
+      )}
+
+      {/* PAGE 8: Printable Invoice */}
+      {activeStep === 8 && (
         <div className="bill-preview-overlay">
           <div className="bill-preview-actions no-print">
-            <button className="back-btn" onClick={() => setIsPrintView(false)}>
-              ← Back to Edit
-            </button>
-            <button className="print-action-btn" onClick={() => window.print()}>
+            <button
+              className="nav-btn secondary"
+              onClick={() => setActiveStep(7)}
+            >
               <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
               >
-                <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                <rect x="6" y="14" width="12" height="8"></rect>
+                <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" />
+              </svg>
+              Back to Review
+            </button>
+            <button className="nav-btn success" onClick={() => window.print()}>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
               </svg>
               Print Invoice
             </button>
           </div>
 
-          {/* THE ACTUAL PRINTABLE BILL (Unchanged logic, just ensure it works with the new data) */}
           <div className="printable-bill">
             <div className="bill-header">
               <div className="bill-logo-section">
@@ -643,27 +1126,28 @@ const Invoice = () => {
                   <tr>
                     <td className="w-40">
                       <strong>Patient Name & Address</strong>
-                      {billData.patientName}
+                      {selectedPatient?.name}
                       <br />
-                      {billData.address}
+                      {selectedPatient?.address}
                       <br />
-                      Age: {billData.age} | Gender: {billData.gender}
+                      Age: {selectedPatient?.age} | Gender:{" "}
+                      {selectedPatient?.gender}
                     </td>
                     <td className="w-30">
                       <strong>Hospital Reference</strong>
-                      MRD No: {billData.mrdNo}
+                      MRD No: {selectedPatient?.mrd}
                       <br />
-                      IP No: {billData.ipNo}
+                      IP No: {selectedPatient?.ip}
                       <br />
-                      Bill No: {billData.billNo}
+                      Bill No: {admissionData.billNo}
                     </td>
                     <td className="w-30">
                       <strong>Stay Details</strong>
-                      Admission: {billData.admissionDate}
+                      Admission: {admissionData.admissionDate}
                       <br />
-                      Discharge: {billData.dischargeDate}
+                      Discharge: {admissionData.dischargeDate}
                       <br />
-                      Consultant: {billData.consultant}
+                      Consultant: {admissionData.consultant}
                     </td>
                   </tr>
                 </tbody>
@@ -687,15 +1171,15 @@ const Invoice = () => {
                       Room & Accomodation Charges
                     </td>
                   </tr>
-                  {roomRents.map((item, index) => (
+                  {roomCharges.map((item, index) => (
                     <tr key={`room-${index}`}>
-                      <td className="text-left">{item.description}</td>
-                      <td>{item.qty}</td>
-                      <td>{item.rate.toFixed(2)}</td>
-                      <td>{item.amount.toFixed(2)}</td>
+                      <td className="text-left">{item.room}</td>
+                      <td>{item.days}</td>
+                      <td>{parseFloat(item.rate).toFixed(2)}</td>
+                      <td>{parseFloat(item.amount).toFixed(2)}</td>
                       <td>
-                        {index === roomRents.length - 1
-                          ? roomTotal.toFixed(2)
+                        {index === roomCharges.length - 1
+                          ? totals.roomTotal.toFixed(2)
                           : ""}
                       </td>
                     </tr>
@@ -705,15 +1189,15 @@ const Invoice = () => {
                       Treatment & Procedural Charges
                     </td>
                   </tr>
-                  {treatments.map((item, index) => (
+                  {treatmentCharges.map((item, index) => (
                     <tr key={`treat-${index}`}>
-                      <td className="text-left">{item.description}</td>
+                      <td className="text-left">{item.treatment}</td>
                       <td>{item.qty}</td>
-                      <td>{item.rate.toFixed(2)}</td>
-                      <td>{item.amount.toFixed(2)}</td>
+                      <td>{parseFloat(item.rate).toFixed(2)}</td>
+                      <td>{parseFloat(item.amount).toFixed(2)}</td>
                       <td>
-                        {index === treatments.length - 1
-                          ? treatmentTotal.toFixed(2)
+                        {index === treatmentCharges.length - 1
+                          ? totals.treatmentTotal.toFixed(2)
                           : ""}
                       </td>
                     </tr>
@@ -723,64 +1207,39 @@ const Invoice = () => {
                       Other Charges & Fees
                     </td>
                   </tr>
-                  <tr>
-                    <td className="text-left" colSpan="4">
-                      CONSUMABLES
-                    </td>
-                    <td>{billData.consumables.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td className="text-left" colSpan="4">
-                      DOCTORS FEE
-                    </td>
-                    <td>{billData.doctorsFee.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td className="text-left" colSpan="4">
-                      NURSE FEE
-                    </td>
-                    <td>{billData.nurseFee.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td className="text-left" colSpan="4">
-                      REGISTRATION FEES
-                    </td>
-                    <td>{billData.registrationFees.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td className="text-left" colSpan="4">
-                      Extras Round Off
-                    </td>
-                    <td>{billData.extrasRoundOff.toFixed(2)}</td>
-                  </tr>
+                  {additionalCharges.map((item, index) => (
+                    <tr key={`extra-${index}`}>
+                      <td className="text-left" colSpan="4">
+                        {item.type}
+                      </td>
+                      <td>{parseFloat(item.amount).toFixed(2)}</td>
+                    </tr>
+                  ))}
+
                   <tr className="bill-total-row grand-total-row">
                     <td className="total-label" colSpan="4">
                       GROSS TOTAL
                     </td>
-                    <td className="total-amount">{grossTotal.toFixed(2)}</td>
+                    <td className="total-amount">{totals.gross.toFixed(2)}</td>
                   </tr>
                   <tr className="bill-total-row">
                     <td className="total-label" colSpan="4">
                       TOTAL ADVANCE PAID (-)
                     </td>
-                    <td>{billData.advancePaid.toFixed(2)}</td>
+                    <td>{parseFloat(advancePaid).toFixed(2)}</td>
                   </tr>
                   <tr className="bill-total-row">
                     <td className="total-label" colSpan="4">
-                      AMOUNT PAID (UPI) (-)
+                      PAYMENTS (CASH/UPI/CARD) (-)
                     </td>
-                    <td>{billData.amountPaidUPI.toFixed(2)}</td>
+                    <td>{totals.currentPaid.toFixed(2)}</td>
                   </tr>
                   <tr className="bill-total-row grand-total-row">
                     <td className="total-label" colSpan="4">
                       BALANCE DUE
                     </td>
                     <td className="total-amount">
-                      {(
-                        grossTotal -
-                        billData.advancePaid -
-                        billData.amountPaidUPI
-                      ).toFixed(2)}
+                      {totals.balance.toFixed(2)}
                     </td>
                   </tr>
                 </tbody>
@@ -798,10 +1257,10 @@ const Invoice = () => {
                 <div className="footer-auth">Auth. Signatory</div>
                 <div className="footer-prepared">
                   <p className="prepared-by-label">PREPARED BY</p>
-                  <p className="preparer-name">SHIJITHA SUMESH</p>
+                  {/* <p className="preparer-name">SHIJITHA SUMESH</p> */}
                 </div>
               </div>
-              <div className="page-number">Page 1</div>
+              {/* <div className="page-number">Page 1</div> */}
             </div>
           </div>
         </div>
