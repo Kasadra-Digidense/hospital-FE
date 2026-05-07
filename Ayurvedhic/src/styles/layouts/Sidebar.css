@@ -268,3 +268,84 @@
 .sidebar-item svg {
   flex-shrink: 0;
 }
+
+
+/* LOGOUT SECTION */
+.sidebar-footer-menu {
+  margin-top: auto;
+  padding-top: 22px;
+  border-top: 1px solid #f1f1f1;
+
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.6s ease 0.5s forwards;
+}
+
+/* LOGOUT BUTTON */
+.sidebar-logout {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: #fff5f5;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 14px 16px;
+  border-radius: 12px;
+
+  cursor: pointer;
+
+  color: #d9534f;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+
+  transition: all 0.25s ease;
+
+  position: relative;
+  overflow: hidden;
+}
+
+/* ICON */
+.sidebar-logout svg {
+  flex-shrink: 0;
+  color: #d9534f;
+  transition: all 0.25s ease;
+}
+
+/* TEXT */
+.sidebar-logout p {
+  margin: 0;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* HOVER */
+.sidebar-logout:hover {
+  background: #d9534f;
+  color: #ffffff;
+
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(217, 83, 79, 0.18);
+}
+
+.sidebar-logout:hover svg {
+  color: #ffffff;
+}
+
+/* ACTIVE CLICK */
+.sidebar-logout:active {
+  transform: scale(0.98);
+}
+
+/* REMOVE BLACK OUTLINE */
+.sidebar-logout:focus {
+  outline: none;
+}
+
+.sidebar-logout:focus-visible {
+  outline: 2px solid rgba(217, 83, 79, 0.25);
+  outline-offset: 2px;
+}

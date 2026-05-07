@@ -11,13 +11,13 @@ import {
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-const CONSULTANT_DOCTORS = [
-  { id: "D001", name: "Dr. Anil Kumar — Ayurveda General" },
-  { id: "D002", name: "Dr. Meera Nair — Panchakarma" },
-  { id: "D003", name: "Dr. Suresh Menon — Ortho & Spine" },
-  { id: "D004", name: "Dr. Priya Pillai — Women's Health" },
-  { id: "D005", name: "Dr. Rajesh Varma — Skin & Cosmetology" },
-];
+// const CONSULTANT_DOCTORS = [
+//   { id: "D001", name: "Dr. Anil Kumar — Ayurveda General" },
+//   { id: "D002", name: "Dr. Meera Nair — Panchakarma" },
+//   { id: "D003", name: "Dr. Suresh Menon — Ortho & Spine" },
+//   { id: "D004", name: "Dr. Priya Pillai — Women's Health" },
+//   { id: "D005", name: "Dr. Rajesh Varma — Skin & Cosmetology" },
+// ];
 
 const generateMRD = () => {
   const now = new Date();
@@ -108,8 +108,8 @@ const PatientRegister = () => {
     if (!formData.state.trim()) newErrors.state = "State is required.";
     if (formData.pincode && !/^\d{6}$/.test(formData.pincode))
       newErrors.pincode = "Enter a valid 6-digit pincode.";
-    if (!formData.consultantDoctor)
-      newErrors.consultantDoctor = "Please select a consultant doctor.";
+    // if (!formData.consultantDoctor)
+    //   newErrors.consultantDoctor = "Please select a consultant doctor.";
     return newErrors;
   };
 
@@ -144,7 +144,7 @@ const PatientRegister = () => {
       },
       mrdNumber: formData.mrdNumber,
       registrationDate: formData.registrationDate,
-      consultantDoctor: formData.consultantDoctor,
+      // consultantDoctor: formData.consultantDoctor,
     };
 
     const result = await dispatch(createPatient(payload));
@@ -164,9 +164,9 @@ const PatientRegister = () => {
   // ── success screen ───────────────────────────────────────────────────────────
 
   if (submitted) {
-    const doctorObj = CONSULTANT_DOCTORS.find(
-      (d) => d.id === formData.consultantDoctor
-    );
+    // const doctorObj = CONSULTANT_DOCTORS.find(
+    //   (d) => d.id === formData.consultantDoctor
+    // );
     return (
       <div className="pr-wrapper">
         <div className="pr-success-card">
@@ -188,12 +188,12 @@ const PatientRegister = () => {
               <span className="pr-success-label">Registration Date</span>
               <span className="pr-success-value">{formData.registrationDate}</span>
             </div>
-            {doctorObj && (
+            {/* {doctorObj && (
               <div className="pr-success-row">
                 <span className="pr-success-label">Consultant</span>
                 <span className="pr-success-value">{doctorObj.name}</span>
               </div>
-            )}
+            )} */}
           </div>
           <button className="pr-btn-primary" onClick={handleReset}>
             Register Another Patient
@@ -537,7 +537,7 @@ const PatientRegister = () => {
               </div>
 
               {/* Consultant Doctor */}
-              <div className="pr-field pr-field--full" id="pr-field-consultantDoctor">
+              {/* <div className="pr-field pr-field--full" id="pr-field-consultantDoctor">
                 <label className="pr-label" htmlFor="pr-doctor">
                   Consultant Doctor <span className="pr-req">*</span>
                 </label>
@@ -558,7 +558,7 @@ const PatientRegister = () => {
                 {errors.consultantDoctor && (
                   <span className="pr-field-error">{errors.consultantDoctor}</span>
                 )}
-              </div>
+              </div> */}
 
             </div>
           </div>
