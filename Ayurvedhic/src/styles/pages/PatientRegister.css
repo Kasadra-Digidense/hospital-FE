@@ -1,290 +1,740 @@
-.patient-page {
+/* =============================================================
+   PatientRegister.css
+   Anjaneyam Ayurvedic Hospital — Patient Registration Page
+   Class prefix: pr-
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Design tokens ─────────────────────────────────────────── */
+:root {
+  --primary: #1F7A4D;
+  --primary-dark: #145A36;
+  --primary-light: #E8F5EE;
+  --primary-glow: rgba(31, 122, 77, 0.12);
+
+  --accent: #F28C28;
+
+  --bg: #F6FAF8;
+  --card-bg: #FFFFFF;
+  --border: #E2EBE6;
+
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+
+  --error: #DC2626;
+  --error-bg: #FEF2F2;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+
+  --shadow-card: 0 2px 12px rgba(15, 30, 20, 0.07);
+  --shadow-hover: 0 6px 22px rgba(15, 30, 20, 0.11);
+
+  --transition: 0.2s ease;
+}
+
+/* ── Wrapper / Page ─────────────────────────────────────────── */
+.pr-wrapper {
+  font-family: 'Inter', sans-serif;
   min-height: 100vh;
-  padding: 32px;
   background:
-    radial-gradient(circle at top right, rgba(242, 139, 58, 0.08), transparent 24%),
-    radial-gradient(circle at bottom left, rgba(31, 122, 77, 0.08), transparent 28%),
-    #fbfdfc;
+    radial-gradient(circle at top right, rgba(242, 140, 40, 0.06), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(31, 122, 77, 0.07), transparent 30%),
+    var(--bg);
+  padding: 36px 28px 60px;
   box-sizing: border-box;
 }
 
-.patient-shell {
-  width: min(1120px, 100%);
+.pr-shell {
+  max-width: 860px;
   margin: 0 auto;
-  animation: patientPageIn 0.5s ease-out forwards;
+  animation: prFadeUp 0.45s ease-out both;
 }
 
-.patient-hero {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 28px;
-}
-
-.patient-kicker {
-  margin: 0 0 10px;
-  color: #1f7a4d;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.patient-title {
-  margin: 0;
-  color: #145a36;
-  font-size: 30px;
-  font-weight: 700;
-}
-
-.patient-subtitle {
-  margin: 10px 0 0;
-  max-width: 680px;
-  color: #667085;
-  line-height: 1.6;
-}
-
-.patient-grid {
-  display: grid;
-  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
-  gap: 24px;
-}
-
-.patient-card {
-  background: #ffffff;
-  border: 1px solid #e7efe9;
-  border-radius: 18px;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
-  padding: 24px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.patient-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
-}
-
-.patient-form-card {
-  position: sticky;
-  top: 24px;
-  align-self: start;
-}
-
-.patient-section-header {
-  margin-bottom: 22px;
-}
-
-.patient-section-header h2 {
-  margin: 0;
-  color: #145a36;
-  font-size: 24px;
-}
-
-.patient-section-header span {
-  display: inline-block;
-  margin-top: 8px;
-  color: #667085;
-  line-height: 1.6;
-}
-
-.patient-form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.patient-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.patient-field .form-label {
-  margin: 0;
-  color: #1f2937;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.custom-input {
-  border: 1px solid #d7e4dc;
-  border-radius: 12px;
-  padding: 14px 16px;
-  font-size: 15px;
-  color: #1f2937;
-  background: #fbfdfc;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.custom-input:focus {
-  border-color: #1f7a4d;
-  box-shadow: 0 0 0 4px rgba(31, 122, 77, 0.12);
-}
-
-.register-btn {
-  margin-top: 4px;
-  border: none;
-  border-radius: 12px;
-  background: #1f7a4d;
-  color: #ffffff;
-  padding: 15px 18px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
-}
-
-.register-btn:disabled,
-.patient-refresh-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.register-btn:hover {
-  background: #145a36;
-  transform: translateY(-2px);
-}
-
-.patient-list-section {
-  margin-top: 28px;
-}
-
-.patient-list-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.patient-list-header h3 {
-  margin: 0;
-  color: #145a36;
-  font-size: 22px;
-}
-
-.patient-list-header p {
-  margin: 8px 0 0;
-  color: #667085;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.patient-status-text {
-  color: #a61b12;
-  font-size: 0.9rem;
-  font-weight: 600;
-  display: inline-block;
-  margin-bottom: 14px;
-}
-
-.patient-refresh-btn {
-  border: none;
-  border-radius: 10px;
-  background: #eef6f1;
-  color: #1f7a4d;
-  padding: 10px 16px;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
-
-.patient-refresh-btn:hover {
-  background: #dfeee5;
-  color: #145a36;
-  transform: translateY(-1px);
-}
-
-.patient-list {
-  display: grid;
-  gap: 14px;
-}
-
-.patient-record-card {
-  border-radius: 14px;
-  padding: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbf9 100%);
-  border: 1px solid #edf3ef;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.patient-record-card:hover {
-  transform: translateY(-2px);
-  border-color: #dce9e1;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
-}
-
-.patient-record-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.patient-record-card h4 {
-  margin: 0;
-  color: #145a36;
-  font-size: 17px;
-}
-
-.patient-record-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #eef6f1;
-  color: #1f7a4d;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.patient-record-card p {
-  margin: 6px 0 0;
-  color: #667085;
-  font-size: 14px;
-}
-
-.patient-empty-state {
-  margin: 0;
-  color: #667085;
-  padding: 28px 0;
-  text-align: center;
-}
-
-@keyframes patientPageIn {
+@keyframes prFadeUp {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(14px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-@media (max-width: 768px) {
-  .patient-page {
-    padding: 20px;
+/* ── Page Header ────────────────────────────────────────────── */
+.pr-page-header {
+  margin-bottom: 32px;
+}
+
+.pr-kicker {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.pr-page-title {
+  margin: 0 0 6px;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  line-height: 1.2;
+}
+
+.pr-page-sub {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Error Banner ───────────────────────────────────────────── */
+.pr-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--error-bg);
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-md);
+  color: var(--error);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+}
+
+.pr-error-banner-icon {
+  font-size: 16px;
+}
+
+/* ── Form Sections ──────────────────────────────────────────── */
+.pr-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pr-section {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 28px;
+  transition: box-shadow var(--transition);
+}
+
+.pr-section:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+/* Section Header */
+.pr-section-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pr-section-num {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pr-section-title {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+.pr-section-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ── Fields Grid ────────────────────────────────────────────── */
+.pr-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 22px;
+}
+
+.pr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pr-field--full {
+  grid-column: 1 / -1;
+}
+
+/* ── Labels ─────────────────────────────────────────────────── */
+.pr-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pr-req {
+  color: var(--error);
+  margin-left: 2px;
+}
+
+.pr-optional {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* ── Inputs ─────────────────────────────────────────────────── */
+.pr-input {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  background: #FAFCFB;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.pr-input::placeholder {
+  color: var(--text-muted);
+}
+
+.pr-input:focus {
+  border-color: var(--primary);
+  background: #fff;
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.pr-input--error {
+  border-color: var(--error);
+  background: var(--error-bg);
+}
+
+.pr-input--error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* ── Input with +91 prefix ──────────────────────────────────── */
+.pr-input-prefix-wrap {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #FAFCFB;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.pr-input-prefix-wrap:focus-within {
+  border-color: var(--primary);
+  background: #fff;
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.pr-input-prefix {
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  border-right: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pr-input--prefixed {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  flex: 1;
+  padding: 11px 14px;
+}
+
+.pr-input--prefixed:focus {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* ── Select ─────────────────────────────────────────────────── */
+.pr-select {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  background: #FAFCFB;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.pr-select:focus {
+  border-color: var(--primary);
+  background-color: #fff;
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* ── Gender Pills ───────────────────────────────────────────── */
+.pr-gender-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pr-gender-pill {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.pr-gender-pill input[type="radio"] {
+  display: none;
+}
+
+.pr-gender-pill span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: #FAFCFB;
+  transition: all var(--transition);
+}
+
+.pr-gender-pill--active span,
+.pr-gender-pill span:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ── Auto-generated Field ───────────────────────────────────── */
+.pr-auto-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--border);
+  background: var(--primary-light);
+}
+
+.pr-auto-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: rgba(31, 122, 77, 0.15);
+  padding: 3px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.pr-auto-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Field Error ────────────────────────────────────────────── */
+.pr-field-error {
+  font-size: 12px;
+  color: var(--error);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pr-field-error::before {
+  content: '⚠';
+  font-size: 11px;
+}
+
+/* ── Action Buttons ─────────────────────────────────────────── */
+.pr-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.pr-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 30px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  box-shadow: 0 4px 14px rgba(31, 122, 77, 0.25);
+}
+
+.pr-btn-primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(31, 122, 77, 0.35);
+}
+
+.pr-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pr-btn-ghost {
+  padding: 12px 22px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.pr-btn-ghost:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.pr-btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Spinner ────────────────────────────────────────────────── */
+.pr-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: prSpin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes prSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Success Card ───────────────────────────────────────────── */
+.pr-success-card {
+  max-width: 480px;
+  margin: 80px auto 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hover);
+  padding: 44px 36px;
+  text-align: center;
+  animation: prFadeUp 0.4s ease-out both;
+}
+
+.pr-success-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.pr-success-title {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.pr-success-sub {
+  margin: 0 0 28px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.pr-success-details {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 28px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pr-success-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.pr-success-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.pr-success-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+.pr-success-mrd {
+  color: var(--primary);
+  font-size: 15px;
+}
+
+/* ── Registered Patients List ───────────────────────────────── */
+.pr-list-section {
+  margin-top: 36px;
+}
+
+.pr-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.pr-list-title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.pr-list-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.pr-btn-refresh {
+  padding: 9px 18px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition);
+}
+
+.pr-btn-refresh:hover:not(:disabled) {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.pr-btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Patient Cards Grid ─────────────────────────────────────── */
+.pr-patient-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.pr-patient-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.pr-patient-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(31, 122, 77, 0.25);
+}
+
+.pr-patient-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pr-patient-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pr-patient-name {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+.pr-patient-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pr-patient-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pr-patient-meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ── Empty State ────────────────────────────────────────────── */
+.pr-empty {
+  text-align: center;
+  padding: 48px 0;
+  color: var(--text-secondary);
+}
+
+.pr-empty-icon {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.pr-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .pr-wrapper {
+    padding: 20px 16px 48px;
   }
 
-  .patient-grid {
+  .pr-page-title {
+    font-size: 22px;
+  }
+
+  .pr-fields {
     grid-template-columns: 1fr;
   }
 
-  .patient-form-card {
-    position: static;
+  .pr-field--full {
+    grid-column: 1;
   }
 
-  .patient-list-header {
+  .pr-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .pr-btn-primary,
+  .pr-btn-ghost {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pr-list-header {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .title {
-    font-size: 2rem;
+  .pr-btn-refresh {
+    width: 100%;
+  }
+
+  .pr-success-card {
+    margin-top: 40px;
+    padding: 32px 22px;
   }
 }

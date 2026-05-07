@@ -1,0 +1,15 @@
+body {
+  margin: 0;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+html {
+  overflow-y: scroll;
+}
+
+body {
+  scrollbar-gutter: stable;
+}
+
