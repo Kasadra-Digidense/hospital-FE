@@ -9,8 +9,8 @@
 
 /* SIDEBAR CONTAINER */
 .sidebar-container {
-  width: 200px;
-  min-width: 200px;
+  width: 240px;
+  min-width: 240px;
   background: #ffffff;
   border-right: 1px solid #f0f0f0;
   display: flex;
@@ -151,8 +151,8 @@
 }
 
 .sidebar-container {
-  width: 200px;
-  min-width: 200px;
+  width: 240px;
+  min-width: 240px;
   background: #ffffff;
   border-right: 1px solid #f0f0f0;
 
@@ -197,6 +197,11 @@
   opacity: 0;
   transform: translateY(10px);
   animation: fadeInUp 0.5s ease forwards;
+}
+
+.sidebar-item p {
+  margin: 0;
+  white-space: nowrap;
 }
 
 .sidebar-item:nth-child(1) { animation-delay: 0.15s; }
