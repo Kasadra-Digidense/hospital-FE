@@ -3,6 +3,11 @@
     min-height: 100vh;
     background: #f8fafc;
     padding: 30px;
+    box-sizing: border-box;
+}
+
+.invoice-container * {
+    box-sizing: border-box;
 }
 
 .invoice-modern-shell {
@@ -761,6 +766,7 @@
 
 .info-table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; }
 .info-table td { border: 1px solid #ddd; padding: 3mm; vertical-align: top; font-size: 11px; line-height: 1.4; }
+.info-content { margin-top: 2mm; }
 
 .bill-items-table table { width: 100%; border-collapse: collapse; }
 .bill-items-table th { background: #f4f4f4; border: 1px solid #ddd; padding: 2mm; font-size: 11px; }
@@ -791,7 +797,10 @@
         top: 0;
         width: 100%;
         padding: 0;
+        margin: 0;
         background: white;
+        height: auto;
+        min-height: auto;
     }
     .bill-preview-actions, .no-print {
         display: none !important;
@@ -800,10 +809,43 @@
         box-shadow: none;
         margin: 0;
         width: 100%;
-        padding: 10mm;
+        padding: 8mm 10mm;
+        min-height: auto;
+        height: auto;
     }
+    .bill-header {
+        margin-bottom: 5mm;
+        padding-bottom: 3mm;
+    }
+    .bill-logo-section {
+        gap: 10px;
+    }
+    .bill-symbol-wrapper img { width: 50px; height: 50px; }
+    .bill-title-anj { font-size: 28px; }
+    .bill-hospital-info p { font-size: 10px; margin: 1px 0; }
+    
+    .bill-discharge-title { margin-bottom: 3mm; }
+    .bill-discharge-title h3 { font-size: 16px; }
+
+    .info-table td { padding: 2mm; font-size: 10px; }
+    .info-content { margin-top: 1mm; }
+    .bill-items-table th, .bill-items-table td { padding: 1.5mm; font-size: 10px; }
+    .section-header-row td { padding: 1mm 2mm; font-size: 9px; }
+    
+    .bill-total-row td { padding: 1.5mm; font-size: 10px; }
+    .grand-total-row td { font-size: 12px; }
+
+    .bill-footer { margin-top: 5mm; padding-top: 5mm; }
+    .footer-note { font-size: 9px; }
+    .footer-auth, .footer-prepared { font-size: 10px; }
+
     @page {
         size: A4;
         margin: 0;
     }
+}
+
+/* --- UTILITIES --- */
+.spacer-y {
+    width: 100%;
 }
