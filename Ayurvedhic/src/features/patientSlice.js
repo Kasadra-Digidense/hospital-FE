@@ -1,27 +1,43 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { createPatientApi, getPatientsApi } from "../api/patientApi";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-export const fetchPatients = createAsyncThunk(
-  "patients/fetchPatients",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await getPatientsApi();
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch patients");
-    }
-  }
-);
+import { createPatientApi, fetchPatientsApi } from "../api/patientApi";
+
+// ─────────────────────────────────────────────
+// CREATE PATIENT
+// ─────────────────────────────────────────────
 
 export const createPatient = createAsyncThunk(
   "patients/createPatient",
-  async (patientData, { rejectWithValue }) => {
+
+  async (payload, thunkAPI) => {
     try {
-      return await createPatientApi(patientData);
+      const data = await createPatientApi(payload);
+      return data;
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to register patient");
+      return thunkAPI.rejectWithValue(error.message);
     }
-  }
+  },
 );
+
+// ─────────────────────────────────────────────
+// FETCH PATIENTS
+// ─────────────────────────────────────────────
+
+export const fetchPatients = createAsyncThunk(
+  "patients/fetchPatients",
+  async (_, thunkAPI) => {
+    try {
+      const data = await fetchPatientsApi();
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  },
+);
+
+// ─────────────────────────────────────────────
+// INITIAL STATE
+// ─────────────────────────────────────────────
 
 const initialState = {
   patients: [],
@@ -29,6 +45,10 @@ const initialState = {
   createStatus: "idle",
   error: null,
 };
+
+// ─────────────────────────────────────────────
+// SLICE
+// ─────────────────────────────────────────────
 
 const patientSlice = createSlice({
   name: "patients",
@@ -38,33 +58,51 @@ const patientSlice = createSlice({
       state.error = null;
     },
   },
+
   extraReducers: (builder) => {
+    // ─────────────────────────
+    // CREATE PATIENT
+    // ─────────────────────────
+
     builder
-      .addCase(fetchPatients.pending, (state) => {
-        state.fetchStatus = "loading";
-        state.error = null;
-      })
-      .addCase(fetchPatients.fulfilled, (state, action) => {
-        state.fetchStatus = "succeeded";
-        state.patients = action.payload;
-      })
-      .addCase(fetchPatients.rejected, (state, action) => {
-        state.fetchStatus = "failed";
-        state.error = action.payload || "Failed to fetch patients";
-      })
       .addCase(createPatient.pending, (state) => {
         state.createStatus = "loading";
         state.error = null;
       })
-      .addCase(createPatient.fulfilled, (state) => {
+      .addCase(createPatient.fulfilled, (state, action) => {
         state.createStatus = "succeeded";
+        state.patients.push(action.payload);
       })
+
       .addCase(createPatient.rejected, (state, action) => {
         state.createStatus = "failed";
-        state.error = action.payload || "Failed to register patient";
+        state.error = action.payload || "Failed to create patient";
+      });
+
+    // ─────────────────────────
+    // FETCH PATIENTS
+    // ─────────────────────────
+
+    builder
+
+      .addCase(fetchPatients.pending, (state) => {
+        state.fetchStatus = "loading";
+      })
+
+      .addCase(fetchPatients.fulfilled, (state, action) => {
+        state.fetchStatus = "succeeded";
+        state.patients = action.payload;
+      })
+
+      .addCase(fetchPatients.rejected, (state, action) => {
+        state.fetchStatus = "failed";
+        state.error = action.payload || "Failed to fetch patients";
       });
   },
 });
 
+// ─────────────────────────────────────────────
+
 export const { clearPatientError } = patientSlice.actions;
+
 export default patientSlice.reducer;
