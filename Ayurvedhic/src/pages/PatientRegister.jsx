@@ -1,6 +1,6 @@
 // src/pages/PatientRegister.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "../styles/pages/PatientRegister.css";
 import {
@@ -11,13 +11,13 @@ import {
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-const CONSULTANT_DOCTORS = [
-  { id: "D001", name: "Dr. Anil Kumar — Ayurveda General" },
-  { id: "D002", name: "Dr. Meera Nair — Panchakarma" },
-  { id: "D003", name: "Dr. Suresh Menon — Ortho & Spine" },
-  { id: "D004", name: "Dr. Priya Pillai — Women's Health" },
-  { id: "D005", name: "Dr. Rajesh Varma — Skin & Cosmetology" },
-];
+// const CONSULTANT_DOCTORS = [
+//   { id: "D001", name: "Dr. Anil Kumar — Ayurveda General" },
+//   { id: "D002", name: "Dr. Meera Nair — Panchakarma" },
+//   { id: "D003", name: "Dr. Suresh Menon — Ortho & Spine" },
+//   { id: "D004", name: "Dr. Priya Pillai — Women's Health" },
+//   { id: "D005", name: "Dr. Rajesh Varma — Skin & Cosmetology" },
+// ];
 
 const generateMRD = () => {
   const now = new Date();
@@ -64,13 +64,16 @@ const buildInitialForm = () => ({
 
 const PatientRegister = () => {
   const dispatch = useDispatch();
+  const errorRef = useRef(null);
+
   const { patients, fetchStatus, createStatus, error } = useSelector(
-    (state) => state.patients
+    (state) => state.patients,
   );
 
   const [formData, setFormData] = useState(buildInitialForm);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [savedPatient, setSavedPatient] = useState(null);
 
   // fetch existing patients on mount
   useEffect(() => {
@@ -81,6 +84,15 @@ const PatientRegister = () => {
   useEffect(() => {
     return () => dispatch(clearPatientError());
   }, [dispatch]);
+
+useEffect(() => {
+  if (error && errorRef.current) {
+    errorRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+}, [error]);
 
   // ── handlers ────────────────────────────────────────────────────────────────
 
@@ -95,7 +107,12 @@ const PatientRegister = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Patient name is required.";
     if (!formData.gender) newErrors.gender = "Please select a gender.";
-    if (!formData.age || isNaN(formData.age) || formData.age < 0 || formData.age > 120)
+    if (
+      !formData.age ||
+      isNaN(formData.age) ||
+      formData.age < 0 ||
+      formData.age > 120
+    )
       newErrors.age = "Enter a valid age (0–120).";
     if (!formData.phone || !/^\d{10}$/.test(formData.phone))
       newErrors.phone = "Enter a valid 10-digit mobile number.";
@@ -108,8 +125,8 @@ const PatientRegister = () => {
     if (!formData.state.trim()) newErrors.state = "State is required.";
     if (formData.pincode && !/^\d{6}$/.test(formData.pincode))
       newErrors.pincode = "Enter a valid 6-digit pincode.";
-    if (!formData.consultantDoctor)
-      newErrors.consultantDoctor = "Please select a consultant doctor.";
+    // if (!formData.consultantDoctor)
+    //   newErrors.consultantDoctor = "Please select a consultant doctor.";
     return newErrors;
   };
 
@@ -144,12 +161,15 @@ const PatientRegister = () => {
       },
       mrdNumber: formData.mrdNumber,
       registrationDate: formData.registrationDate,
-      consultantDoctor: formData.consultantDoctor,
+      // consultantDoctor: formData.consultantDoctor,
     };
 
     const result = await dispatch(createPatient(payload));
     if (createPatient.fulfilled.match(result)) {
       dispatch(fetchPatients());
+
+      setSavedPatient(result.payload);
+
       setSubmitted(true);
     }
   };
@@ -158,15 +178,16 @@ const PatientRegister = () => {
     setFormData(buildInitialForm());
     setErrors({});
     setSubmitted(false);
+    setSavedPatient(null);
+
     dispatch(clearPatientError());
   };
-
   // ── success screen ───────────────────────────────────────────────────────────
 
   if (submitted) {
-    const doctorObj = CONSULTANT_DOCTORS.find(
-      (d) => d.id === formData.consultantDoctor
-    );
+    // const doctorObj = CONSULTANT_DOCTORS.find(
+    //   (d) => d.id === formData.consultantDoctor
+    // );
     return (
       <div className="pr-wrapper">
         <div className="pr-success-card">
@@ -182,18 +203,22 @@ const PatientRegister = () => {
             </div>
             <div className="pr-success-row">
               <span className="pr-success-label">MRD Number</span>
-              <span className="pr-success-value pr-success-mrd">{formData.mrdNumber}</span>
+              <span className="pr-success-value pr-success-mrd">
+                {savedPatient?.mrdNumber}
+              </span>
             </div>
             <div className="pr-success-row">
               <span className="pr-success-label">Registration Date</span>
-              <span className="pr-success-value">{formData.registrationDate}</span>
+              <span className="pr-success-value">
+                {savedPatient?.registrationDate}
+              </span>
             </div>
-            {doctorObj && (
+            {/* {doctorObj && (
               <div className="pr-success-row">
                 <span className="pr-success-label">Consultant</span>
                 <span className="pr-success-value">{doctorObj.name}</span>
               </div>
-            )}
+            )} */}
           </div>
           <button className="pr-btn-primary" onClick={handleReset}>
             Register Another Patient
@@ -208,7 +233,6 @@ const PatientRegister = () => {
   return (
     <div className="pr-wrapper">
       <div className="pr-shell">
-
         {/* ── Page Header ── */}
         <div className="pr-page-header">
           <div className="pr-page-header-left">
@@ -222,7 +246,7 @@ const PatientRegister = () => {
 
         {/* ── API Error Banner ── */}
         {error && (
-          <div className="pr-error-banner">
+          <div ref={errorRef} className="pr-error-banner">
             <span className="pr-error-banner-icon">⚠</span>
             {error}
           </div>
@@ -230,7 +254,6 @@ const PatientRegister = () => {
 
         {/* ── Form ── */}
         <form className="pr-form" onSubmit={handleSubmit} noValidate>
-
           {/* ── Section 1 — Personal Information ── */}
           <div className="pr-section">
             <div className="pr-section-head">
@@ -242,7 +265,6 @@ const PatientRegister = () => {
             </div>
 
             <div className="pr-fields">
-
               {/* Full Name */}
               <div className="pr-field pr-field--full" id="pr-field-name">
                 <label className="pr-label" htmlFor="pr-name">
@@ -257,7 +279,9 @@ const PatientRegister = () => {
                   className={`pr-input${errors.name ? " pr-input--error" : ""}`}
                   placeholder="e.g. Ramesh Kumar Nair"
                 />
-                {errors.name && <span className="pr-field-error">{errors.name}</span>}
+                {errors.name && (
+                  <span className="pr-field-error">{errors.name}</span>
+                )}
               </div>
 
               {/* Gender */}
@@ -278,11 +302,15 @@ const PatientRegister = () => {
                         checked={formData.gender === g}
                         onChange={handleChange}
                       />
-                      <span>{g === "Male" ? "♂" : g === "Female" ? "♀" : "⚧"} {g}</span>
+                      <span>
+                        {g === "Male" ? "♂" : g === "Female" ? "♀" : "⚧"} {g}
+                      </span>
                     </label>
                   ))}
                 </div>
-                {errors.gender && <span className="pr-field-error">{errors.gender}</span>}
+                {errors.gender && (
+                  <span className="pr-field-error">{errors.gender}</span>
+                )}
               </div>
 
               {/* Age */}
@@ -301,7 +329,9 @@ const PatientRegister = () => {
                   min="0"
                   max="120"
                 />
-                {errors.age && <span className="pr-field-error">{errors.age}</span>}
+                {errors.age && (
+                  <span className="pr-field-error">{errors.age}</span>
+                )}
               </div>
 
               {/* Mobile */}
@@ -322,7 +352,9 @@ const PatientRegister = () => {
                     maxLength={10}
                   />
                 </div>
-                {errors.phone && <span className="pr-field-error">{errors.phone}</span>}
+                {errors.phone && (
+                  <span className="pr-field-error">{errors.phone}</span>
+                )}
               </div>
 
               {/* Alternate Mobile */}
@@ -364,9 +396,10 @@ const PatientRegister = () => {
                   className={`pr-input${errors.email ? " pr-input--error" : ""}`}
                   placeholder="patient@example.com"
                 />
-                {errors.email && <span className="pr-field-error">{errors.email}</span>}
+                {errors.email && (
+                  <span className="pr-field-error">{errors.email}</span>
+                )}
               </div>
-
             </div>
           </div>
 
@@ -376,12 +409,13 @@ const PatientRegister = () => {
               <div className="pr-section-num">2</div>
               <div>
                 <h2 className="pr-section-title">Address Information</h2>
-                <p className="pr-section-desc">Patient's residential address.</p>
+                <p className="pr-section-desc">
+                  Patient's residential address.
+                </p>
               </div>
             </div>
 
             <div className="pr-fields">
-
               {/* House Name */}
               <div className="pr-field pr-field--full" id="pr-field-houseName">
                 <label className="pr-label" htmlFor="pr-house">
@@ -399,7 +433,7 @@ const PatientRegister = () => {
               </div>
 
               {/* Street */}
-              <div className="pr-field pr-field--full" id="pr-field-street">
+              {/* <div className="pr-field pr-field--full" id="pr-field-street">
                 <label className="pr-label" htmlFor="pr-street">
                   Street / Area
                 </label>
@@ -412,7 +446,7 @@ const PatientRegister = () => {
                   className="pr-input"
                   placeholder="e.g. MG Road, Near Bus Stand"
                 />
-              </div>
+              </div> */}
 
               {/* City */}
               <div className="pr-field" id="pr-field-city">
@@ -428,7 +462,9 @@ const PatientRegister = () => {
                   className={`pr-input${errors.city ? " pr-input--error" : ""}`}
                   placeholder="e.g. Thrissur"
                 />
-                {errors.city && <span className="pr-field-error">{errors.city}</span>}
+                {errors.city && (
+                  <span className="pr-field-error">{errors.city}</span>
+                )}
               </div>
 
               {/* District */}
@@ -464,7 +500,9 @@ const PatientRegister = () => {
                   className={`pr-input${errors.state ? " pr-input--error" : ""}`}
                   placeholder="e.g. Kerala"
                 />
-                {errors.state && <span className="pr-field-error">{errors.state}</span>}
+                {errors.state && (
+                  <span className="pr-field-error">{errors.state}</span>
+                )}
               </div>
 
               {/* Country */}
@@ -502,12 +540,11 @@ const PatientRegister = () => {
                   <span className="pr-field-error">{errors.pincode}</span>
                 )}
               </div>
-
             </div>
           </div>
 
           {/* ── Section 3 — Hospital Details ── */}
-          <div className="pr-section">
+          {/* <div className="pr-section">
             <div className="pr-section-head">
               <div className="pr-section-num">3</div>
               <div>
@@ -516,28 +553,28 @@ const PatientRegister = () => {
               </div>
             </div>
 
-            <div className="pr-fields">
+            <div className="pr-fields"> */}
 
-              {/* MRD Number */}
-              <div className="pr-field" id="pr-field-mrdNumber">
+          {/* MRD Number */}
+          {/* <div className="pr-field" id="pr-field-mrdNumber">
                 <label className="pr-label">MRD Number</label>
                 <div className="pr-auto-field">
                   <span className="pr-auto-badge">Auto</span>
                   <span className="pr-auto-value">{formData.mrdNumber}</span>
                 </div>
-              </div>
+              </div> */}
 
-              {/* Registration Date */}
-              <div className="pr-field" id="pr-field-registrationDate">
+          {/* Registration Date */}
+          {/* <div className="pr-field" id="pr-field-registrationDate">
                 <label className="pr-label">Registration Date</label>
                 <div className="pr-auto-field">
                   <span className="pr-auto-badge">Auto</span>
                   <span className="pr-auto-value">{formData.registrationDate}</span>
                 </div>
-              </div>
+              </div> */}
 
-              {/* Consultant Doctor */}
-              <div className="pr-field pr-field--full" id="pr-field-consultantDoctor">
+          {/* Consultant Doctor */}
+          {/* <div className="pr-field pr-field--full" id="pr-field-consultantDoctor">
                 <label className="pr-label" htmlFor="pr-doctor">
                   Consultant Doctor <span className="pr-req">*</span>
                 </label>
@@ -558,10 +595,10 @@ const PatientRegister = () => {
                 {errors.consultantDoctor && (
                   <span className="pr-field-error">{errors.consultantDoctor}</span>
                 )}
-              </div>
+              </div> */}
 
-            </div>
-          </div>
+          {/* </div>
+          </div> */}
 
           {/* ── Actions ── */}
           <div className="pr-actions">
@@ -579,18 +616,16 @@ const PatientRegister = () => {
               disabled={createStatus === "loading"}
             >
               {createStatus === "loading" ? (
-                <><span className="pr-spinner" />Registering…</>
+                <>
+                  <span className="pr-spinner" />
+                  Registering…
+                </>
               ) : (
                 "Register Patient"
               )}
             </button>
           </div>
-
         </form>
-
-
-
-
       </div>
     </div>
   );
