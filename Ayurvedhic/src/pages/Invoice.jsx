@@ -150,7 +150,7 @@ const Invoice = () => {
   }, [roomCharges, treatmentCharges, additionalCharges, payments, advancePaid]);
 
   // HANDLERS
-  const nextStep = () => setActiveStep((prev) => Math.min(prev + 1, 8));
+  const nextStep = () => setActiveStep((prev) => Math.min(prev + 1, 6));
   const prevStep = () => setActiveStep((prev) => Math.max(prev - 1, 1));
 
   const handlePatientSelect = (p) => {
@@ -178,8 +178,12 @@ const Invoice = () => {
       const option = TREATMENT_OPTIONS.find((o) => o.name === value);
       if (option) {
         newRows[index].rate = option.rate;
+        // Default Qty to 1 if it's currently 0 or empty
+        if (!newRows[index].qty || newRows[index].qty === 0) {
+          newRows[index].qty = 1;
+        }
         newRows[index].amount =
-          (parseFloat(newRows[index].qty) || 0) * option.rate;
+          (parseFloat(newRows[index].qty) || 1) * option.rate;
       }
     }
     if (field === "qty" || field === "rate") {
@@ -199,7 +203,7 @@ const Invoice = () => {
 
   return (
     <div
-      className={`invoice-container ${activeStep === 8 ? "print-ready" : ""}`}
+      className={`invoice-container ${activeStep === 6 ? "print-ready" : ""}`}
       onClick={() => {
         setShowPatientList(false);
         setRoomCharges((prev) => prev.map((r) => ({ ...r, showList: false })));
@@ -208,7 +212,7 @@ const Invoice = () => {
         );
       }}
     >
-      {activeStep < 8 && (
+      {activeStep < 6 && (
         <div className="invoice-modern-shell">
           {/* Top Header */}
           <div className="invoice-top-bar">
@@ -216,7 +220,7 @@ const Invoice = () => {
               <h1>Invoice Wizard</h1>
               <p>Follow the steps to generate professional bill</p>
             </div>
-            <div className="step-progress-pill">Step {activeStep} of 7</div>
+            <div className="step-progress-pill">Step {activeStep} of 5</div>
           </div>
 
           <div className="invoice-main-layout">
@@ -224,12 +228,10 @@ const Invoice = () => {
             <aside className="invoice-steps-sidebar">
               {[
                 { n: 1, label: "Select Patient", desc: "Search & Verify" },
-                { n: 2, label: "Stay Details", desc: "Dates & Doctor" },
-                { n: 3, label: "Room Rents", desc: "Stay charges" },
-                { n: 4, label: "Treatments", desc: "Procedures" },
-                { n: 5, label: "Extra Charges", desc: "Misc fees" },
-                { n: 6, label: "Payments", desc: "Cash/UPI/Balance" },
-                { n: 7, label: "Review", desc: "Final Check" },
+                { n: 2, label: "Stay Details", desc: "Stay & Rooms" },
+                { n: 3, label: "Treatments", desc: "Procedures & Extras" },
+                { n: 4, label: "Payments", desc: "Cash/UPI/Balance" },
+                { n: 5, label: "Review", desc: "Final Check" },
               ].map((s) => (
                 <div
                   key={s.n}
@@ -335,7 +337,7 @@ const Invoice = () => {
                 </div>
               )}
 
-              {/* PAGE 2: Admission Details */}
+              {/* PAGE 2: Admission & Room Details */}
               {activeStep === 2 && (
                 <div className="step-content">
                   <h2>Admission & Stay Details</h2>
@@ -420,14 +422,11 @@ const Invoice = () => {
                       <input type="text" value={calculatedDays} readOnly />
                     </div>
                   </div>
-                </div>
-              )}
 
-              {/* PAGE 3: Room Charges */}
-              {activeStep === 3 && (
-                <div className="step-content">
+                  <div className="spacer-y" style={{ height: "40px" }}></div>
+
                   <div className="section-header-row">
-                    <h2>Room & Accomodation</h2>
+                    <h3>Room & Accomodation</h3>
                     <button
                       className="add-row-btn"
                       onClick={() =>
@@ -502,8 +501,16 @@ const Invoice = () => {
                                           const newRows = [...roomCharges];
                                           newRows[index].room = opt.name;
                                           newRows[index].rate = opt.rate;
+                                          // Default Days to 1 if it's currently 0 or empty
+                                          if (
+                                            !newRows[index].days ||
+                                            newRows[index].days === 0
+                                          ) {
+                                            newRows[index].days = 1;
+                                          }
                                           newRows[index].amount =
-                                            newRows[index].days * opt.rate;
+                                            (parseFloat(newRows[index].days) ||
+                                              1) * opt.rate;
                                           newRows[index].showList = false;
                                           setRoomCharges(newRows);
                                         }}
@@ -568,8 +575,8 @@ const Invoice = () => {
                 </div>
               )}
 
-              {/* PAGE 4: Treatment Charges */}
-              {activeStep === 4 && (
+              {/* PAGE 3: Treatments & Additional Charges */}
+              {activeStep === 3 && (
                 <div className="step-content">
                   <div className="section-header-row">
                     <h2>Treatments & Procedures</h2>
@@ -717,14 +724,11 @@ const Invoice = () => {
                       </tbody>
                     </table>
                   </div>
-                </div>
-              )}
 
-              {/* PAGE 5: Additional Charges */}
-              {activeStep === 5 && (
-                <div className="step-content">
+                  <div className="spacer-y" style={{ height: "40px" }}></div>
+
                   <div className="section-header-row">
-                    <h2>Additional Fees</h2>
+                    <h3>Additional Fees</h3>
                     <button
                       className="add-row-btn"
                       onClick={() =>
@@ -742,7 +746,7 @@ const Invoice = () => {
                       <thead>
                         <tr>
                           <th>Charge Type</th>
-                          <th>Amount</th>
+                          <th>Amount (₹)</th>
                           <th></th>
                         </tr>
                       </thead>
@@ -798,8 +802,8 @@ const Invoice = () => {
                 </div>
               )}
 
-              {/* PAGE 6: Payment Details */}
-              {activeStep === 6 && (
+              {/* PAGE 4: Payment Details */}
+              {activeStep === 4 && (
                 <div className="step-content">
                   <h2>Payment Information</h2>
                   <div className="payment-layout">
@@ -906,14 +910,14 @@ const Invoice = () => {
                 </div>
               )}
 
-              {/* PAGE 7: Review & Finalize */}
-              {activeStep === 7 && (
+              {/* PAGE 5: Review & Finalize */}
+              {activeStep === 5 && (
                 <div className="step-content">
                   <div className="review-header">
                     <h2>Review Invoice</h2>
                     {/* <div className="review-actions">
                                 <button className="draft-btn">Save Draft</button>
-                                <button className="generate-btn" onClick={() => setActiveStep(8)}>Generate & Print</button>
+                                <button className="generate-btn" onClick={() => setActiveStep(6)}>Generate & Print</button>
                             </div> */}
                   </div>
                   <div className="review-grid">
@@ -1011,7 +1015,7 @@ const Invoice = () => {
                 </button>
 
                 <div className="review-actions">
-                  {activeStep === 7 && (
+                  {activeStep === 5 && (
                     <button className="nav-btn draft">
                       <svg
                         viewBox="0 0 24 24"
@@ -1027,7 +1031,7 @@ const Invoice = () => {
                     </button>
                   )}
 
-                  {activeStep < 7 ? (
+                  {activeStep < 5 ? (
                     <button
                       className="nav-btn primary"
                       onClick={() => setActiveStep((prev) => prev + 1)}
@@ -1042,10 +1046,10 @@ const Invoice = () => {
                         <path d="M5 12h14M12 5l7 7-7 7" />
                       </svg>
                     </button>
-                  ) : activeStep === 7 ? (
+                  ) : activeStep === 5 ? (
                     <button
                       className="nav-btn success"
-                      onClick={() => setActiveStep(8)}
+                      onClick={() => setActiveStep(6)}
                     >
                       <svg
                         viewBox="0 0 24 24"
@@ -1066,13 +1070,13 @@ const Invoice = () => {
         </div>
       )}
 
-      {/* PAGE 8: Printable Invoice */}
-      {activeStep === 8 && (
+      {/* PAGE 6: Printable Invoice */}
+      {activeStep === 6 && (
         <div className="bill-preview-overlay">
           <div className="bill-preview-actions no-print">
             <button
               className="nav-btn secondary"
-              onClick={() => setActiveStep(7)}
+              onClick={() => setActiveStep(5)}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -1126,28 +1130,34 @@ const Invoice = () => {
                   <tr>
                     <td className="w-40">
                       <strong>Patient Name & Address</strong>
-                      {selectedPatient?.name}
-                      <br />
-                      {selectedPatient?.address}
-                      <br />
-                      Age: {selectedPatient?.age} | Gender:{" "}
-                      {selectedPatient?.gender}
+                      <div className="info-content">
+                        {selectedPatient?.name}
+                        <br />
+                        {selectedPatient?.address}
+                        <br />
+                        Age: {selectedPatient?.age} | Gender:{" "}
+                        {selectedPatient?.gender}
+                      </div>
                     </td>
                     <td className="w-30">
                       <strong>Hospital Reference</strong>
-                      MRD No: {selectedPatient?.mrd}
-                      <br />
-                      IP No: {selectedPatient?.ip}
-                      <br />
-                      Bill No: {admissionData.billNo}
+                      <div className="info-content">
+                        MRD No: {selectedPatient?.mrd}
+                        <br />
+                        IP No: {selectedPatient?.ip}
+                        <br />
+                        Bill No: {admissionData.billNo}
+                      </div>
                     </td>
                     <td className="w-30">
                       <strong>Stay Details</strong>
-                      Admission: {admissionData.admissionDate}
-                      <br />
-                      Discharge: {admissionData.dischargeDate}
-                      <br />
-                      Consultant: {admissionData.consultant}
+                      <div className="info-content">
+                        Adm: {admissionData.admissionDate}
+                        <br />
+                        Dis: {admissionData.dischargeDate}
+                        <br />
+                        Doc: {admissionData.consultant}
+                      </div>
                     </td>
                   </tr>
                 </tbody>
