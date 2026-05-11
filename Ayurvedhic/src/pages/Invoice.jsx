@@ -176,8 +176,8 @@ const Invoice = () => {
     if (roomFetchStatus === "idle") {
       dispatch(fetchInvoiceRooms());
     }
-  }, [dispatch, fetchStatus, roomFetchStatus]);
-  }, [dispatch, patientsStatus]);
+  }, [dispatch, fetchStatus, roomFetchStatus, patientsStatus]);
+
 
   useEffect(() => {
     if (treatmentsStatus === "idle") {
