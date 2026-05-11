@@ -4,7 +4,9 @@ import "../styles/pages/Invoice.css";
 import ayurLogo from "../assets/ayur_logo.png";
 import {
   fetchInvoicePatients,
-  fetchTreatments,
+  fetchInvoiceRooms,
+  fetchTreatments
+  
 } from "../features/invoiceSlice";
 
 // Constants for Dropdowns
@@ -17,22 +19,6 @@ const DEFAULT_TREATMENT_OPTIONS = [
   { name: "SIRODHARA", rate: 800 },
   { name: "UDVARTHANAM", rate: 600 },
   
-];
-
-const ROOM_OPTIONS = [
-  { name: "ROOM - 01", rate: 500 },
-  { name: "ROOM - 02", rate: 500 },
-  { name: "ROOM - 03", rate: 500 },
-  { name: "ROOM - 04", rate: 500 },
-  { name: "ROOM - 05", rate: 500 },
-  { name: "ROOM - 06", rate: 600 },
-  { name: "ROOM - 07", rate: 600 },
-  { name: "ROOM - 08 A", rate: 700 },
-  { name: "ROOM - 08 B", rate: 700 },
-  { name: "ROOM - 11 A", rate: 800 },
-  { name: "ROOM - 11 B", rate: 800 },
-  { name: "DELUXE - 1", rate: 1200 },
-  { name: "DELUXE - 2", rate: 1200 },
 ];
 
 const ADDITIONAL_CHARGE_TYPES = [
@@ -111,10 +97,22 @@ const normalizePatient = (patient) => ({
   address: buildPatientAddress(patient.address, patient.place),
 });
 
+const normalizeRoom = (room) => ({
+  id: room.id,
+  name: room.room_number,
+  group: room.room_group,
+  rate: Number(room.rate) || 0,
+});
+
 const Invoice = () => {
   const dispatch = useDispatch();
   const {
     patients,
+    rooms,
+    fetchStatus,
+    roomFetchStatus,
+    error,
+    roomError,
     treatments,
     patientsStatus,
     treatmentsStatus,
@@ -175,6 +173,10 @@ const Invoice = () => {
     if (patientsStatus === "idle") {
       dispatch(fetchInvoicePatients());
     }
+    if (roomFetchStatus === "idle") {
+      dispatch(fetchInvoiceRooms());
+    }
+  }, [dispatch, fetchStatus, roomFetchStatus]);
   }, [dispatch, patientsStatus]);
 
   useEffect(() => {
@@ -229,6 +231,13 @@ const Invoice = () => {
   const handleRoomRowChange = (index, field, value) => {
     const newRows = [...roomCharges];
     newRows[index][field] = value;
+
+    if (field === "room") {
+      newRows[index].days = 0;
+      newRows[index].rate = 0;
+      newRows[index].amount = 0;
+    }
+
     if (field === "days" || field === "rate") {
       newRows[index].amount =
         (parseFloat(newRows[index].days) || 0) *
@@ -242,6 +251,11 @@ const Invoice = () => {
     newRows[index][field] = value;
 
     if (field === "treatment") {
+      newRows[index].qty = 0;
+      newRows[index].rate = 0;
+      newRows[index].amount = 0;
+
+      const option = TREATMENT_OPTIONS.find((o) => o.name === value);
       const option = treatmentOptions.find((o) => o.name === value);
       if (option) {
         newRows[index].rate = option.rate;
@@ -266,6 +280,19 @@ const Invoice = () => {
     [patients],
   );
 
+  const roomOptions = useMemo(() => rooms.map(normalizeRoom), [rooms]);
+
+  const roomTypeOptions = useMemo(() => {
+    const apiRoomTypes = roomOptions.map((room) => room.group).filter(Boolean);
+    return [...new Set([...apiRoomTypes, ...ROOM_TYPES])];
+  }, [roomOptions]);
+
+  const admissionRoomOptions = useMemo(() => {
+    const filteredRooms = roomOptions.filter(
+      (room) => room.group === admissionData.roomType,
+    );
+    return filteredRooms.length > 0 ? filteredRooms : roomOptions;
+  }, [admissionData.roomType, roomOptions]);
   const treatmentOptions = useMemo(() => {
     const treatmentList = Array.isArray(treatments)
       ? treatments
@@ -495,10 +522,11 @@ const Invoice = () => {
                           setAdmissionData({
                             ...admissionData,
                             roomType: e.target.value,
+                            roomNumber: "",
                           })
                         }
                       >
-                        {ROOM_TYPES.map((r) => (
+                        {roomTypeOptions.map((r) => (
                           <option key={r} value={r}>
                             {r}
                           </option>
@@ -507,8 +535,7 @@ const Invoice = () => {
                     </div>
                     <div className="modern-field">
                       <label>Room Number</label>
-                      <input
-                        type="text"
+                      <select
                         value={admissionData.roomNumber}
                         onChange={(e) =>
                           setAdmissionData({
@@ -516,7 +543,14 @@ const Invoice = () => {
                             roomNumber: e.target.value,
                           })
                         }
-                      />
+                      >
+                        <option value="">Select room</option>
+                        {admissionRoomOptions.map((room) => (
+                          <option key={room.id} value={room.name}>
+                            {room.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div className="modern-field readonly">
                       <label>Calculated Days</label>
@@ -587,22 +621,31 @@ const Invoice = () => {
                                 <div className="dropdown-chevron">▼</div>
                                 {row.showList && (
                                   <div className="table-dropdown">
+                                    {roomFetchStatus === "loading" && (
+                                      <div className="table-dropdown-item">
+                                        Loading rooms...
+                                      </div>
+                                    )}
+                                    {roomFetchStatus === "failed" && (
+                                      <div className="table-dropdown-item">
+                                        {roomError || "Failed to fetch rooms"}
+                                      </div>
+                                    )}
                                     {(row.room
-                                      ? ROOM_OPTIONS.filter((opt) =>
-                                          opt.name
+                                      ? roomOptions.filter((opt) =>
+                                          `${opt.name} ${opt.group}`
                                             .toLowerCase()
                                             .includes(row.room.toLowerCase()),
                                         )
-                                      : ROOM_OPTIONS
+                                      : roomOptions
                                     ).map((opt) => (
                                       <div
-                                        key={opt.name}
+                                        key={opt.id}
                                         className="table-dropdown-item"
                                         onClick={() => {
                                           const newRows = [...roomCharges];
                                           newRows[index].room = opt.name;
                                           newRows[index].rate = opt.rate;
-                                          // Default Days to 1 if it's currently 0 or empty
                                           if (
                                             !newRows[index].days ||
                                             newRows[index].days === 0
@@ -616,9 +659,16 @@ const Invoice = () => {
                                           setRoomCharges(newRows);
                                         }}
                                       >
-                                        {opt.name}
+                                        {opt.name} - {opt.group}
                                       </div>
                                     ))}
+                                    {roomFetchStatus !== "loading" &&
+                                      roomFetchStatus !== "failed" &&
+                                      roomOptions.length === 0 && (
+                                        <div className="table-dropdown-item">
+                                          No rooms found
+                                        </div>
+                                      )}
                                   </div>
                                 )}
                               </div>
