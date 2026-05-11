@@ -36,6 +36,7 @@ export const fetchTreatmentsApi = async () => {
       throw new Error("Unable to reach the server.");
     }
  
+
     throw new Error(
       error.response?.data?.detail || "Failed to fetch treatments",
     );

@@ -44,11 +44,15 @@ export const fetchTreatments = createAsyncThunk(
 const initialState = {
   patients: [],
   rooms: [],
-  treatments: [],
   fetchStatus: "idle",
   roomFetchStatus: "idle",
   error: null,
   roomError: null,
+  treatments: [],
+  patientsStatus: "idle",
+  treatmentsStatus: "idle",
+  patientsError: null,
+  treatmentsError: null,
 };
 
 const invoiceSlice = createSlice({
@@ -58,11 +62,11 @@ const invoiceSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchInvoicePatients.pending, (state) => {
-        state.fetchStatus = "loading";
-        state.error = null;
+        state.patientsStatus = "loading";
+        state.patientsError = null;
       })
       .addCase(fetchInvoicePatients.fulfilled, (state, action) => {
-        state.fetchStatus = "succeeded";
+        state.patientsStatus = "succeeded";
         state.patients = action.payload;
       })
       .addCase(fetchInvoicePatients.rejected, (state, action) => {
@@ -86,7 +90,7 @@ const invoiceSlice = createSlice({
       })
 
       // Fetch Treatments
-
+    
       .addCase(fetchTreatments.pending, (state) => {
         state.treatmentsStatus = "loading";
         state.treatmentsError = null;
