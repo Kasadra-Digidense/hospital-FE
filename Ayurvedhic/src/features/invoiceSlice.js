@@ -1,5 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { fetchInvoicePatientsApi } from "../api/invoiceAPI";
+import {
+  fetchInvoicePatientsApi,
+  fetchTreatmentsApi,
+} from "../api/invoiceAPI";
 
 export const fetchInvoicePatients = createAsyncThunk(
   "invoice/fetchInvoicePatients",
@@ -13,10 +16,25 @@ export const fetchInvoicePatients = createAsyncThunk(
   },
 );
 
+export const fetchTreatments = createAsyncThunk(
+  "invoice/fetchTreatments",
+  async (_, thunkAPI) => {
+    try {
+      const data = await fetchTreatmentsApi();
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  },
+);
+
 const initialState = {
   patients: [],
-  fetchStatus: "idle",
-  error: null,
+  treatments: [],
+  patientsStatus: "idle",
+  treatmentsStatus: "idle",
+  patientsError: null,
+  treatmentsError: null,
 };
 
 const invoiceSlice = createSlice({
@@ -26,16 +44,28 @@ const invoiceSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchInvoicePatients.pending, (state) => {
-        state.fetchStatus = "loading";
-        state.error = null;
+        state.patientsStatus = "loading";
+        state.patientsError = null;
       })
       .addCase(fetchInvoicePatients.fulfilled, (state, action) => {
-        state.fetchStatus = "succeeded";
+        state.patientsStatus = "succeeded";
         state.patients = action.payload;
       })
       .addCase(fetchInvoicePatients.rejected, (state, action) => {
-        state.fetchStatus = "failed";
-        state.error = action.payload || "Failed to fetch patients";
+        state.patientsStatus = "failed";
+        state.patientsError = action.payload || "Failed to fetch patients";
+      })
+      .addCase(fetchTreatments.pending, (state) => {
+        state.treatmentsStatus = "loading";
+        state.treatmentsError = null;
+      })
+      .addCase(fetchTreatments.fulfilled, (state, action) => {
+        state.treatmentsStatus = "succeeded";
+        state.treatments = action.payload;
+      })
+      .addCase(fetchTreatments.rejected, (state, action) => {
+        state.treatmentsStatus = "failed";
+        state.treatmentsError = action.payload || "Failed to fetch treatments";
       });
   },
 });

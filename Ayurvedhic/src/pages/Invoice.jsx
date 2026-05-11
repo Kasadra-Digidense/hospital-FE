@@ -2,10 +2,13 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "../styles/pages/Invoice.css";
 import ayurLogo from "../assets/ayur_logo.png";
-import { fetchInvoicePatients } from "../features/invoiceSlice";
+import {
+  fetchInvoicePatients,
+  fetchTreatments,
+} from "../features/invoiceSlice";
 
 // Constants for Dropdowns
-const TREATMENT_OPTIONS = [
+const DEFAULT_TREATMENT_OPTIONS = [
   { name: "ABHYANGAM", rate: 400 },
   { name: "BANDANAM", rate: 250 },
   { name: "LEPANAM", rate: 300 },
@@ -62,6 +65,38 @@ const buildPatientAddress = (address = {}, fallbackPlace = "") => {
   return fallbackPlace || "Address not available";
 };
 
+const normalizeTreatment = (treatment) => ({
+  id:
+    treatment.id ??
+    treatment._id ??
+    treatment.treatmentId ??
+    treatment.item_id ??
+    treatment.item_name ??
+    treatment.name ??
+    treatment.treatmentName ??
+    treatment.treatment_name,
+  name:
+    treatment.item_name ??
+    treatment.itemName ??
+    treatment.name ??
+    treatment.treatmentName ??
+    treatment.treatment_name ??
+    treatment.title ??
+    "",
+  rate: Number(
+    treatment.item_rate ??
+      treatment.itemRate ??
+      treatment.item_price ??
+      treatment.itemPrice ??
+    treatment.rate ??
+      treatment.amount ??
+      treatment.price ??
+      treatment.fee ??
+      treatment.charge ??
+      0,
+  ),
+});
+
 const normalizePatient = (patient) => ({
   id: patient.id,
   name: patient.name,
@@ -78,9 +113,14 @@ const normalizePatient = (patient) => ({
 
 const Invoice = () => {
   const dispatch = useDispatch();
-  const { patients, fetchStatus, error } = useSelector(
-    (state) => state.invoice,
-  );
+  const {
+    patients,
+    treatments,
+    patientsStatus,
+    treatmentsStatus,
+    patientsError,
+    treatmentsError,
+  } = useSelector((state) => state.invoice);
   const [activeStep, setActiveStep] = useState(1);
 
   // PAGE 1: Patient Data
@@ -132,10 +172,16 @@ const Invoice = () => {
   }, [calculatedDays]);
 
   useEffect(() => {
-    if (fetchStatus === "idle") {
+    if (patientsStatus === "idle") {
       dispatch(fetchInvoicePatients());
     }
-  }, [dispatch, fetchStatus]);
+  }, [dispatch, patientsStatus]);
+
+  useEffect(() => {
+    if (treatmentsStatus === "idle") {
+      dispatch(fetchTreatments());
+    }
+  }, [dispatch, treatmentsStatus]);
 
   // CALCULATIONS
   const totals = useMemo(() => {
@@ -196,7 +242,7 @@ const Invoice = () => {
     newRows[index][field] = value;
 
     if (field === "treatment") {
-      const option = TREATMENT_OPTIONS.find((o) => o.name === value);
+      const option = treatmentOptions.find((o) => o.name === value);
       if (option) {
         newRows[index].rate = option.rate;
         // Default Qty to 1 if it's currently 0 or empty
@@ -219,6 +265,24 @@ const Invoice = () => {
     () => patients.map(normalizePatient),
     [patients],
   );
+
+  const treatmentOptions = useMemo(() => {
+    const treatmentList = Array.isArray(treatments)
+      ? treatments
+      : Array.isArray(treatments?.results)
+        ? treatments.results
+        : Array.isArray(treatments?.data)
+          ? treatments.data
+          : [];
+
+    const normalizedTreatments = treatmentList
+      .map(normalizeTreatment)
+      .filter((treatment) => treatment.name);
+
+    return normalizedTreatments.length > 0
+      ? normalizedTreatments
+      : DEFAULT_TREATMENT_OPTIONS;
+  }, [treatments]);
 
   const filteredPatients = invoicePatients.filter(
     (p) =>
@@ -302,7 +366,7 @@ const Invoice = () => {
                       <div className="dropdown-chevron">▼</div>
                       {showPatientList && (
                         <div className="dropdown-list">
-                          {fetchStatus === "loading" && (
+                          {patientsStatus === "loading" && (
                             <div className="dropdown-item">
                               <small>Loading patients...</small>
                             </div>
@@ -322,16 +386,16 @@ const Invoice = () => {
                               </small>
                             </div>
                           ))}
-                          {fetchStatus !== "loading" &&
+                          {patientsStatus !== "loading" &&
                             (patientSearch ? filteredPatients : invoicePatients)
                               .length === 0 && (
                               <div className="dropdown-item">
                                 <small>No patients found</small>
                               </div>
                             )}
-                          {fetchStatus === "failed" && error && (
+                          {patientsStatus === "failed" && patientsError && (
                             <div className="dropdown-item">
-                              <small>{error}</small>
+                              <small>{patientsError}</small>
                             </div>
                           )}
                         </div>
@@ -677,17 +741,17 @@ const Invoice = () => {
                                 {row.showList && (
                                   <div className="table-dropdown">
                                     {(row.treatment
-                                      ? TREATMENT_OPTIONS.filter((opt) =>
+                                      ? treatmentOptions.filter((opt) =>
                                           opt.name
                                             .toLowerCase()
                                             .includes(
                                               row.treatment.toLowerCase(),
                                             ),
                                         )
-                                      : TREATMENT_OPTIONS
+                                      : treatmentOptions
                                     ).map((opt) => (
                                       <div
-                                        key={opt.name}
+                                        key={opt.id || opt.name}
                                         className="table-dropdown-item"
                                         onClick={() => {
                                           handleTreatmentRowChange(
@@ -703,6 +767,17 @@ const Invoice = () => {
                                         {opt.name}
                                       </div>
                                     ))}
+                                    {treatmentsStatus === "loading" && (
+                                      <div className="table-dropdown-item">
+                                        Loading treatments...
+                                      </div>
+                                    )}
+                                    {treatmentsStatus === "failed" &&
+                                      treatmentsError && (
+                                        <div className="table-dropdown-item">
+                                          {treatmentsError}
+                                        </div>
+                                      )}
                                   </div>
                                 )}
                               </div>
