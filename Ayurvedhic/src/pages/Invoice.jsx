@@ -13,7 +13,7 @@ const TREATMENT_OPTIONS = [
   { name: "PIZHICHIL", rate: 1200 },
   { name: "SIRODHARA", rate: 800 },
   { name: "UDVARTHANAM", rate: 600 },
-  { name: "NASYAM", rate: 200 },
+  
 ];
 
 const ROOM_OPTIONS = [
@@ -1118,7 +1118,7 @@ const Invoice = () => {
               </svg>
               Back to Review
             </button>
-            
+
             <button className="nav-btn success" onClick={() => window.print()}>
               <svg
                 viewBox="0 0 24 24"
