@@ -1,5 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { fetchInvoicePatientsApi } from "../api/invoiceAPI";
+import {
+  fetchInvoicePatientsApi,
+  fetchInvoiceRoomsApi,
+} from "../api/invoiceAPI";
 
 export const fetchInvoicePatients = createAsyncThunk(
   "invoice/fetchInvoicePatients",
@@ -13,10 +16,25 @@ export const fetchInvoicePatients = createAsyncThunk(
   },
 );
 
+export const fetchInvoiceRooms = createAsyncThunk(
+  "invoice/fetchInvoiceRooms",
+  async (_, thunkAPI) => {
+    try {
+      const data = await fetchInvoiceRoomsApi();
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  },
+);
+
 const initialState = {
   patients: [],
+  rooms: [],
   fetchStatus: "idle",
+  roomFetchStatus: "idle",
   error: null,
+  roomError: null,
 };
 
 const invoiceSlice = createSlice({
@@ -36,6 +54,18 @@ const invoiceSlice = createSlice({
       .addCase(fetchInvoicePatients.rejected, (state, action) => {
         state.fetchStatus = "failed";
         state.error = action.payload || "Failed to fetch patients";
+      })
+      .addCase(fetchInvoiceRooms.pending, (state) => {
+        state.roomFetchStatus = "loading";
+        state.roomError = null;
+      })
+      .addCase(fetchInvoiceRooms.fulfilled, (state, action) => {
+        state.roomFetchStatus = "succeeded";
+        state.rooms = action.payload;
+      })
+      .addCase(fetchInvoiceRooms.rejected, (state, action) => {
+        state.roomFetchStatus = "failed";
+        state.roomError = action.payload || "Failed to fetch rooms";
       });
   },
 });

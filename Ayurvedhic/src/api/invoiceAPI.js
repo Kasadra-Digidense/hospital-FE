@@ -12,3 +12,16 @@ export const fetchInvoicePatientsApi = async () => {
     throw new Error(error.response?.data?.detail || "Failed to fetch patients");
   }
 };
+
+export const fetchInvoiceRoomsApi = async () => {
+  try {
+    const response = await axiosInstance.get("/rooms/");
+    return response.data;
+  } catch (error) {
+    if (!error.response) {
+      throw new Error("Unable to reach the server.");
+    }
+
+    throw new Error(error.response?.data?.detail || "Failed to fetch rooms");
+  }
+};
