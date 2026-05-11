@@ -1,6 +1,8 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import "../styles/pages/Invoice.css";
 import ayurLogo from "../assets/ayur_logo.png";
+import { fetchInvoicePatients } from "../features/invoiceSlice";
 
 // Constants for Dropdowns
 const TREATMENT_OPTIONS = [
@@ -42,30 +44,44 @@ const PAYMENT_METHODS = ["Cash", "UPI", "Card"];
 const ROOM_TYPES = ["Non AC Big", "Non AC Small", "AC Deluxe", "General Ward"];
 const DOCTORS = ["DR SANAL", "DR ANJALI", "DR KRISHNA"];
 
-const MOCK_PATIENTS = [
-  {
-    id: 1,
-    name: "SHOBHA",
-    mrd: "22027",
-    ip: "2604/91",
-    age: "48",
-    gender: "FEMALE",
-    address: "KOUSALYAM, AIGOOR, KODAGU, KARNATAKA",
-  },
-  {
-    id: 2,
-    name: "RAJESH",
-    mrd: "22028",
-    ip: "2605/92",
-    age: "35",
-    gender: "MALE",
-    address: "Kannur, Kerala",
-  },
-];
+const buildPatientAddress = (address = {}, fallbackPlace = "") => {
+  const parts = [
+    address.houseName,
+    address.street,
+    address.city,
+    address.district,
+    address.state,
+    address.country,
+    address.pincode,
+  ].filter(Boolean);
+
+  if (parts.length > 0) {
+    return parts.join(", ");
+  }
+
+  return fallbackPlace || "Address not available";
+};
+
+const normalizePatient = (patient) => ({
+  id: patient.id,
+  name: patient.name,
+  age: patient.age,
+  gender: patient.gender,
+  phone: patient.phone,
+  altPhone: patient.altPhone,
+  email: patient.email,
+  place: patient.place,
+  mrd: patient.mrdNumber,
+  registrationDate: patient.registrationDate,
+  address: buildPatientAddress(patient.address, patient.place),
+});
 
 const Invoice = () => {
+  const dispatch = useDispatch();
+  const { patients, fetchStatus, error } = useSelector(
+    (state) => state.invoice,
+  );
   const [activeStep, setActiveStep] = useState(1);
-  const [isPrintView, setIsPrintView] = useState(false);
 
   // PAGE 1: Patient Data
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -84,7 +100,7 @@ const Invoice = () => {
 
   // PAGE 3: Room Charges
   const [roomCharges, setRoomCharges] = useState([
-    { room: "ROOM - 01", days: 0, rate: 0, amount: 0, showList: false },
+    { room: "", days: 0, rate: 0, amount: 0, showList: false },
   ]);
 
   // PAGE 4: Treatment Charges
@@ -115,6 +131,12 @@ const Invoice = () => {
       handleRoomRowChange(0, "days", calculatedDays);
     }
   }, [calculatedDays]);
+
+  useEffect(() => {
+    if (fetchStatus === "idle") {
+      dispatch(fetchInvoicePatients());
+    }
+  }, [dispatch, fetchStatus]);
 
   // CALCULATIONS
   const totals = useMemo(() => {
@@ -194,11 +216,16 @@ const Invoice = () => {
     setTreatmentCharges(newRows);
   };
 
-  const filteredPatients = MOCK_PATIENTS.filter(
+  const invoicePatients = useMemo(
+    () => patients.map(normalizePatient),
+    [patients],
+  );
+
+  const filteredPatients = invoicePatients.filter(
     (p) =>
       p.name.toLowerCase().includes(patientSearch.toLowerCase()) ||
-      p.mrd.includes(patientSearch) ||
-      p.ip.includes(patientSearch),
+      (p.mrd || "").toLowerCase().includes(patientSearch.toLowerCase()) ||
+      (p.phone || "").includes(patientSearch),
   );
 
   return (
@@ -265,7 +292,7 @@ const Invoice = () => {
                     >
                       <input
                         type="text"
-                        placeholder="Search by Name, MRD or IP Number..."
+                        placeholder="Search by Name, MRD or Phone Number..."
                         value={patientSearch}
                         onFocus={() => setShowPatientList(true)}
                         onChange={(e) => {
@@ -276,9 +303,14 @@ const Invoice = () => {
                       <div className="dropdown-chevron">▼</div>
                       {showPatientList && (
                         <div className="dropdown-list">
+                          {fetchStatus === "loading" && (
+                            <div className="dropdown-item">
+                              <small>Loading patients...</small>
+                            </div>
+                          )}
                           {(patientSearch
                             ? filteredPatients
-                            : MOCK_PATIENTS
+                            : invoicePatients
                           ).map((p) => (
                             <div
                               key={p.id}
@@ -287,14 +319,20 @@ const Invoice = () => {
                             >
                               <span>{p.name}</span>
                               <small>
-                                MRD: {p.mrd} | IP: {p.ip}
+                                MRD: {p.mrd} | Phone: {p.phone || "-"}
                               </small>
                             </div>
                           ))}
-                          {(patientSearch ? filteredPatients : MOCK_PATIENTS)
-                            .length === 0 && (
+                          {fetchStatus !== "loading" &&
+                            (patientSearch ? filteredPatients : invoicePatients)
+                              .length === 0 && (
+                              <div className="dropdown-item">
+                                <small>No patients found</small>
+                              </div>
+                            )}
+                          {fetchStatus === "failed" && error && (
                             <div className="dropdown-item">
-                              <small>No patients found</small>
+                              <small>{error}</small>
                             </div>
                           )}
                         </div>
@@ -318,8 +356,8 @@ const Invoice = () => {
                           <span>{selectedPatient.mrd}</span>
                         </div>
                         <div className="info-grp">
-                          <strong>IP No:</strong>{" "}
-                          <span>{selectedPatient.ip}</span>
+                          <strong>Phone:</strong>{" "}
+                          <span>{selectedPatient.phone || "-"}</span>
                         </div>
                         <div className="info-grp">
                           <strong>Age/Gender:</strong>{" "}
@@ -930,7 +968,8 @@ const Invoice = () => {
                         <strong>{selectedPatient?.name}</strong>
                       </p>
                       <p>
-                        MRD: {selectedPatient?.mrd} | IP: {selectedPatient?.ip}
+                        MRD: {selectedPatient?.mrd} | Phone:{" "}
+                        {selectedPatient?.phone || "-"}
                       </p>
                     </div>
                     <div className="review-section">
@@ -1144,7 +1183,7 @@ const Invoice = () => {
                       <div className="info-content">
                         MRD No: {selectedPatient?.mrd}
                         <br />
-                        IP No: {selectedPatient?.ip}
+                        Phone: {selectedPatient?.phone || "-"}
                         <br />
                         Bill No: {admissionData.billNo}
                       </div>
