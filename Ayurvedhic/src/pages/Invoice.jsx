@@ -5,6 +5,7 @@ import ayurLogo from "../assets/ayur_logo.png";
 import {
   fetchInvoicePatients,
   fetchInvoiceRooms,
+  fetchTreatments
 } from "../features/invoiceSlice";
 
 // Constants for Dropdowns
