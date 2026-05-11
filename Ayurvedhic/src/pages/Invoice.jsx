@@ -1118,6 +1118,7 @@ const Invoice = () => {
               </svg>
               Back to Review
             </button>
+            
             <button className="nav-btn success" onClick={() => window.print()}>
               <svg
                 viewBox="0 0 24 24"
