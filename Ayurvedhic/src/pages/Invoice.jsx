@@ -255,7 +255,6 @@ const Invoice = () => {
       newRows[index].rate = 0;
       newRows[index].amount = 0;
 
-      const option = TREATMENT_OPTIONS.find((o) => o.name === value);
       const option = treatmentOptions.find((o) => o.name === value);
       if (option) {
         newRows[index].rate = option.rate;
