@@ -70,8 +70,8 @@ const invoiceSlice = createSlice({
         state.patients = action.payload;
       })
       .addCase(fetchInvoicePatients.rejected, (state, action) => {
-        state.fetchStatus = "failed";
-        state.error = action.payload || "Failed to fetch patients";
+        state.patientsStatus = "failed";
+        state.patientsError = action.payload || "Failed to fetch patients";
       })
 
       // Fetch Rooms

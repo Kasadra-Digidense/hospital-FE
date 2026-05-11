@@ -170,20 +170,20 @@ const Invoice = () => {
   }, [calculatedDays]);
 
   useEffect(() => {
-    if (patientsStatus === "idle") {
+    if (patientsStatus !== "loading") {
       dispatch(fetchInvoicePatients());
     }
-    if (roomFetchStatus === "idle") {
+    if (roomFetchStatus !== "loading" && roomFetchStatus === "idle") {
       dispatch(fetchInvoiceRooms());
     }
-  }, [dispatch, fetchStatus, roomFetchStatus, patientsStatus]);
+  }, [dispatch]);
 
 
   useEffect(() => {
-    if (treatmentsStatus === "idle") {
+    if (treatmentsStatus !== "loading" && treatmentsStatus === "idle") {
       dispatch(fetchTreatments());
     }
-  }, [dispatch, treatmentsStatus]);
+  }, [dispatch]);
 
   // CALCULATIONS
   const totals = useMemo(() => {
