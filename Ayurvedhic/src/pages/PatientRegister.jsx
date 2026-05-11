@@ -3,11 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "../styles/pages/PatientRegister.css";
-import {
-  clearPatientError,
-  createPatient,
-  fetchPatients,
-} from "../features/patientSlice";
+import { clearPatientError, createPatient } from "../features/patientSlice";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -66,33 +62,26 @@ const PatientRegister = () => {
   const dispatch = useDispatch();
   const errorRef = useRef(null);
 
-  const { patients, fetchStatus, createStatus, error } = useSelector(
-    (state) => state.patients,
-  );
+  const { createStatus, error } = useSelector((state) => state.patients);
 
   const [formData, setFormData] = useState(buildInitialForm);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [savedPatient, setSavedPatient] = useState(null);
 
-  // fetch existing patients on mount
-  useEffect(() => {
-    if (fetchStatus === "idle") dispatch(fetchPatients());
-  }, [dispatch, fetchStatus]);
-
   // clear redux error on unmount
   useEffect(() => {
     return () => dispatch(clearPatientError());
   }, [dispatch]);
 
-useEffect(() => {
-  if (error && errorRef.current) {
-    errorRef.current.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }
-}, [error]);
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [error]);
 
   // ── handlers ────────────────────────────────────────────────────────────────
 
@@ -166,10 +155,7 @@ useEffect(() => {
 
     const result = await dispatch(createPatient(payload));
     if (createPatient.fulfilled.match(result)) {
-      dispatch(fetchPatients());
-
       setSavedPatient(result.payload);
-
       setSubmitted(true);
     }
   };
