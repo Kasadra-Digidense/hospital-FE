@@ -27,7 +27,7 @@ const DashBoard = () => {
             <div className="dashboard-card-content">
               <h3 className="dashboard-card-title dashboard-text-green">Create Patients</h3>
               <p className="dashboard-card-desc">Add new patient details to the system</p>
-              <button className="dashboard-btn dashboard-btn-green">
+              <button className="dashboard-btn dashboard-btn-green" onClick={()=>navigate("/patient-register")}>
                 Register Now
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="dashboard-btn-icon"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
               </button>
@@ -59,7 +59,7 @@ const DashBoard = () => {
           </div>
 
           {/* View Treatment Details Card */}
-          <div className="dashboard-card dashboard-card-green">
+          {/* <div className="dashboard-card dashboard-card-green">
             <div className="dashboard-card-icon-wrapper dashboard-icon-green">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -74,7 +74,7 @@ const DashBoard = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="dashboard-btn-icon"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
               </button>
             </div>
-          </div>
+          </div> */}
 
         </div>
       </div>

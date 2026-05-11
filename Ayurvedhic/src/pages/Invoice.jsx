@@ -13,7 +13,7 @@ const TREATMENT_OPTIONS = [
   { name: "PIZHICHIL", rate: 1200 },
   { name: "SIRODHARA", rate: 800 },
   { name: "UDVARTHANAM", rate: 600 },
-  { name: "NASYAM", rate: 200 },
+  
 ];
 
 const ROOM_OPTIONS = [
@@ -100,7 +100,7 @@ const Invoice = () => {
 
   // PAGE 3: Room Charges
   const [roomCharges, setRoomCharges] = useState([
-    { room: "ROOM - 01", days: 0, rate: 0, amount: 0, showList: false },
+    { room: "", days: 0, rate: 0, amount: 0, showList: false },
   ]);
 
   // PAGE 4: Treatment Charges
@@ -115,7 +115,6 @@ const Invoice = () => {
 
   // PAGE 6: Payment Details
   const [payments, setPayments] = useState([{ method: "Cash", amount: 0 }]);
-  const [advancePaid, setAdvancePaid] = useState(0);
 
   // LOGIC: Days Calculation
   const calculatedDays = useMemo(() => {
@@ -157,7 +156,7 @@ const Invoice = () => {
       (sum, p) => sum + (parseFloat(p.amount) || 0),
       0,
     );
-    const totalPaid = currentPaid + parseFloat(advancePaid || 0);
+    const totalPaid = currentPaid;
     const balance = gross - totalPaid;
 
     return {
@@ -169,7 +168,7 @@ const Invoice = () => {
       totalPaid,
       balance,
     };
-  }, [roomCharges, treatmentCharges, additionalCharges, payments, advancePaid]);
+  }, [roomCharges, treatmentCharges, additionalCharges, payments]);
 
   // HANDLERS
   const nextStep = () => setActiveStep((prev) => Math.min(prev + 1, 6));
@@ -922,14 +921,6 @@ const Invoice = () => {
                           <strong>₹{totals.gross.toFixed(2)}</strong>
                         </div>
                         <div className="sum-row">
-                          <span>Advance Paid</span>
-                          <input
-                            type="number"
-                            value={advancePaid}
-                            onChange={(e) => setAdvancePaid(e.target.value)}
-                          />
-                        </div>
-                        <div className="sum-row">
                           <span>Current Payment</span>{" "}
                           <strong>₹{totals.currentPaid.toFixed(2)}</strong>
                         </div>
@@ -1127,6 +1118,7 @@ const Invoice = () => {
               </svg>
               Back to Review
             </button>
+
             <button className="nav-btn success" onClick={() => window.print()}>
               <svg
                 viewBox="0 0 24 24"
@@ -1270,12 +1262,6 @@ const Invoice = () => {
                       GROSS TOTAL
                     </td>
                     <td className="total-amount">{totals.gross.toFixed(2)}</td>
-                  </tr>
-                  <tr className="bill-total-row">
-                    <td className="total-label" colSpan="4">
-                      TOTAL ADVANCE PAID (-)
-                    </td>
-                    <td>{parseFloat(advancePaid).toFixed(2)}</td>
                   </tr>
                   <tr className="bill-total-row">
                     <td className="total-label" colSpan="4">
