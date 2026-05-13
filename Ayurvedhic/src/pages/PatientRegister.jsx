@@ -56,6 +56,14 @@ const buildInitialForm = () => ({
   consultantDoctor: "",
 });
 
+const getPatientField = (patient, ...keys) => {
+  const matchedKey = keys.find(
+    (key) => patient?.[key] !== undefined && patient?.[key] !== null,
+  );
+
+  return matchedKey ? patient[matchedKey] : "";
+};
+
 // ── component ─────────────────────────────────────────────────────────────────
 
 const PatientRegister = () => {
@@ -190,13 +198,23 @@ const PatientRegister = () => {
             <div className="pr-success-row">
               <span className="pr-success-label">MRD Number</span>
               <span className="pr-success-value pr-success-mrd">
-                {savedPatient?.mrdNumber}
+                {getPatientField(savedPatient, "mrdNumber", "mrd_number") || "-"}
+              </span>
+            </div>
+            <div className="pr-success-row">
+              <span className="pr-success-label">IP Number</span>
+              <span className="pr-success-value">
+                {getPatientField(savedPatient, "ipNumber", "ip_number") || "-"}
               </span>
             </div>
             <div className="pr-success-row">
               <span className="pr-success-label">Registration Date</span>
               <span className="pr-success-value">
-                {savedPatient?.registrationDate}
+                {getPatientField(
+                  savedPatient,
+                  "registrationDate",
+                  "registration_date",
+                ) || "-"}
               </span>
             </div>
             {/* {doctorObj && (

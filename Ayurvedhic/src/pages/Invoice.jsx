@@ -90,12 +90,24 @@ const normalizePatient = (patient) => ({
   age: patient.age,
   gender: patient.gender,
   phone: patient.phone,
-  altPhone: patient.altPhone,
+  altPhone: patient.altPhone ?? patient.alt_phone,
   email: patient.email,
   place: patient.place,
-  mrd: patient.mrdNumber,
-  registrationDate: patient.registrationDate,
-  address: buildPatientAddress(patient.address, patient.place),
+  mrd: patient.mrdNumber ?? patient.mrd_number,
+  ipNumber: patient.ipNumber ?? patient.ip_number,
+  registrationDate: patient.registrationDate ?? patient.registration_date,
+  address: buildPatientAddress(
+    patient.address ?? {
+      houseName: patient.houseName ?? patient.house_name,
+      street: patient.street,
+      city: patient.city,
+      district: patient.district,
+      state: patient.state,
+      country: patient.country,
+      pincode: patient.pincode,
+    },
+    patient.place,
+  ),
 });
 
 const normalizeRoom = (room) => ({
@@ -557,7 +569,7 @@ const Invoice = () => {
                             >
                               <span>{p.name}</span>
                               <small>
-                                MRD: {p.mrd} | Phone: {p.phone || "-"}
+                                MRD: {p.mrd} | IP: {p.ipNumber || "-"} | Phone: {p.phone || "-"}
                               </small>
                             </div>
                           ))}
@@ -597,6 +609,10 @@ const Invoice = () => {
                         <div className="info-grp">
                           <strong>MRD No:</strong>{" "}
                           <span>{selectedPatient.mrd}</span>
+                        </div>
+                        <div className="info-grp">
+                          <strong>IP No:</strong>{" "}
+                          <span>{selectedPatient.ipNumber || "-"}</span>
                         </div>
                         <div className="info-grp">
                           <strong>Phone:</strong>{" "}
@@ -1281,7 +1297,8 @@ const Invoice = () => {
                         <strong>{selectedPatient?.name}</strong>
                       </p>
                       <p>
-                        MRD: {selectedPatient?.mrd} | Phone:{" "}
+                        MRD: {selectedPatient?.mrd} | IP:{" "}
+                        {selectedPatient?.ipNumber || "-"} | Phone:{" "}
                         {selectedPatient?.phone || "-"}
                       </p>
                     </div>
@@ -1504,6 +1521,8 @@ const Invoice = () => {
                       <strong>Hospital Reference</strong>
                       <div className="info-content">
                         MRD No: {selectedPatient?.mrd}
+                        <br />
+                        IP No: {selectedPatient?.ipNumber || "-"}
                         <br />
                         Phone: {selectedPatient?.phone || "-"}
                         <br />
