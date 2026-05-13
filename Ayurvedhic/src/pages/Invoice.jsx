@@ -344,7 +344,7 @@ const Invoice = () => {
             <aside className="invoice-steps-sidebar">
               {[
                 { n: 1, label: "Select Patient", desc: "Search & Verify" },
-                { n: 2, label: "Stay Details", desc: "Stay & Rooms" },
+                { n: 2, label: "Stay Details", desc: "Stay & Rooms" }, 
                 { n: 3, label: "Treatments", desc: "Procedures & Extras" },
                 { n: 4, label: "Payments", desc: "Cash/UPI/Balance" },
                 { n: 5, label: "Review", desc: "Final Check" },
@@ -983,7 +983,7 @@ const Invoice = () => {
                           + Add Method
                         </button>
                       </div>
-                      <table className="wizard-table">
+                      <table className="wizard-table payment-table">
                         <thead>
                           <tr>
                             <th>Method</th>
