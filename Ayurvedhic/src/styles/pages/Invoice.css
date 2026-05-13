@@ -18,7 +18,7 @@
     box-shadow: 0 15px 40px rgba(0,0,0,0.08);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
     min-height: 730px;
 }
 
@@ -391,7 +391,8 @@
     border-radius: 10px;
     max-height: 280px;
     overflow-y: auto;
-    padding: 6px;
+    padding: 6px 6px 12px;
+    scroll-padding-bottom: 12px;
 }
 
 .table-dropdown-item {
@@ -463,6 +464,27 @@
     display: grid;
     grid-template-columns: 1.5fr 1fr;
     gap: 40px;
+}
+
+.payment-table {
+    table-layout: fixed;
+}
+
+.payment-table th:first-child,
+.payment-table td:first-child {
+    width: 140px;
+    min-width: 0;
+}
+
+.payment-table th:nth-child(2),
+.payment-table td:nth-child(2) {
+    width: auto;
+}
+
+.payment-table th:last-child,
+.payment-table td:last-child {
+    width: 52px;
+    min-width: 0;
 }
 
 .summary-card {
@@ -866,4 +888,119 @@
 /* --- UTILITIES --- */
 .spacer-y {
     width: 100%;
+}
+
+
+/* =========================================
+   Simple Page Load Animations
+   ========================================= */
+
+.invoice-modern-shell {
+  animation: invoiceFadeUp 0.45s ease-out;
+}
+
+.step-content {
+  animation: invoiceFade 0.35s ease;
+}
+
+.patient-summary-card,
+.summary-card,
+.review-section,
+.dynamic-table-container,
+.payment-layout,
+.printable-bill {
+  animation: invoiceSoftUp 0.4s ease;
+}
+
+/* Sidebar step animation */
+.step-item {
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.step-item:hover {
+  transform: translateY(-2px);
+}
+
+/* Buttons */
+.nav-btn,
+.add-row-btn,
+.row-del-btn {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.nav-btn:hover,
+.add-row-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Inputs */
+input,
+select,
+textarea {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+/* Dropdown animation */
+.dropdown-list,
+.table-dropdown {
+  animation: dropdownFade 0.2s ease;
+}
+
+/* =========================================
+   Keyframes
+   ========================================= */
+
+@keyframes invoiceFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes invoiceFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes invoiceSoftUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
