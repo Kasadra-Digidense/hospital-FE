@@ -307,6 +307,34 @@
     box-shadow: 0 0 0 4px rgba(27, 67, 50, 0.05);
 }
 
+.dropdown-input-wrapper input.pr-input--error,
+.modern-field input.pr-input--error,
+.modern-field select.pr-input--error {
+    border-color: #dc2626;
+    background: #fef2f2;
+}
+
+.dropdown-input-wrapper input.pr-input--error:focus,
+.modern-field input.pr-input--error:focus,
+.modern-field select.pr-input--error:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.pr-field-error {
+    font-size: 12px;
+    color: #dc2626;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 3px;
+}
+
+.pr-field-error::before {
+    content: '⚠';
+    font-size: 11px;
+}
+
 .modern-field.readonly input {
     background: #f8fafc;
     cursor: not-allowed;
