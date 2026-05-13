@@ -125,6 +125,7 @@ const Invoice = () => {
     createError,
   } = useSelector((state) => state.invoice);
   const [activeStep, setActiveStep] = useState(1);
+  const [validationErrors, setValidationErrors] = useState({});
 
   // PAGE 1: Patient Data
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -135,7 +136,7 @@ const Invoice = () => {
   const [admissionData, setAdmissionData] = useState({
     admissionDate: "",
     dischargeDate: "",
-    consultant: DOCTORS[0],
+    consultant: "",
     roomType: ROOM_TYPES[0],
     roomNumber: "ROOM - 01",
     billNo: "2024/001",
@@ -167,12 +168,6 @@ const Invoice = () => {
     const diffTime = Math.abs(end - start);
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 0;
   }, [admissionData.admissionDate, admissionData.dischargeDate]);
-
-  useEffect(() => {
-    if (roomCharges.length === 1 && roomCharges[0].days === 0) {
-      handleRoomRowChange(0, "days", calculatedDays);
-    }
-  }, [calculatedDays]);
 
   useEffect(() => {
     if (patientsStatus !== "loading") {
@@ -224,13 +219,62 @@ const Invoice = () => {
   }, [roomCharges, treatmentCharges, additionalCharges, payments]);
 
   // HANDLERS
-  const nextStep = () => setActiveStep((prev) => Math.min(prev + 1, 6));
-  const prevStep = () => setActiveStep((prev) => Math.max(prev - 1, 1));
+  const validateStep = (step) => {
+    const errors = {};
+
+    if (step === 1 && !selectedPatient?.id) {
+      errors.patient = "Please select a patient to continue.";
+    }
+
+    if (step === 2) {
+      if (!admissionData.admissionDate) {
+        errors.admissionDate = "Admission date is required.";
+      }
+
+      if (!admissionData.dischargeDate) {
+        errors.dischargeDate = "Discharge date is required.";
+      }
+
+      if (!admissionData.consultant) {
+        errors.consultant = "Please select a consultant doctor.";
+      }
+    }
+
+    return errors;
+  };
+
+  const showValidationErrors = (step) => {
+    const errors = validateStep(step);
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const goToStep = (targetStep) => {
+    if (targetStep <= activeStep) {
+      setValidationErrors({});
+      setActiveStep(targetStep);
+      return;
+    }
+
+    for (let step = activeStep; step < targetStep; step += 1) {
+      if (!showValidationErrors(step)) {
+        setActiveStep(step);
+        return;
+      }
+    }
+
+    setValidationErrors({});
+    setActiveStep(targetStep);
+  };
+
+  const nextStep = () => goToStep(Math.min(activeStep + 1, 6));
+  const prevStep = () => goToStep(Math.max(activeStep - 1, 1));
 
   const handlePatientSelect = (p) => {
     setSelectedPatient(p);
     setPatientSearch(p.name);
     setShowPatientList(false);
+    setValidationErrors((prev) => ({ ...prev, patient: "" }));
   };
 
   const handleRoomRowChange = (index, field, value) => {
@@ -450,7 +494,7 @@ const Invoice = () => {
                 <div
                   key={s.n}
                   className={`step-item ${activeStep === s.n ? "active" : activeStep > s.n ? "completed" : ""}`}
-                  onClick={() => setActiveStep(s.n)}
+                  onClick={() => goToStep(s.n)}
                 >
                   <div className="step-number">
                     {activeStep > s.n ? "✓" : s.n}
@@ -479,12 +523,19 @@ const Invoice = () => {
                     >
                       <input
                         type="text"
+                        aria-invalid={Boolean(validationErrors.patient)}
+                        className={validationErrors.patient ? "pr-input--error" : ""}
                         placeholder="Search by Name, MRD or Phone Number..."
                         value={patientSearch}
                         onFocus={() => setShowPatientList(true)}
                         onChange={(e) => {
                           setPatientSearch(e.target.value);
                           setShowPatientList(true);
+                          setSelectedPatient(null);
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            patient: "",
+                          }));
                         }}
                       />
                       <div className="dropdown-chevron">▼</div>
@@ -525,6 +576,11 @@ const Invoice = () => {
                         </div>
                       )}
                     </div>
+                    {validationErrors.patient && (
+                      <span className="pr-field-error">
+                        {validationErrors.patient}
+                      </span>
+                    )}
                   </div>
 
                   {selectedPatient && (
@@ -571,6 +627,10 @@ const Invoice = () => {
                       <label>Admission Date</label>
                       <input
                         type="date"
+                        aria-invalid={Boolean(validationErrors.admissionDate)}
+                        className={
+                          validationErrors.admissionDate ? "pr-input--error" : ""
+                        }
                         value={admissionData.admissionDate}
                         onChange={(e) =>
                           setAdmissionData({
@@ -578,12 +638,27 @@ const Invoice = () => {
                             admissionDate: e.target.value,
                           })
                         }
+                        onInput={() =>
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            admissionDate: "",
+                          }))
+                        }
                       />
+                      {validationErrors.admissionDate && (
+                        <span className="pr-field-error">
+                          {validationErrors.admissionDate}
+                        </span>
+                      )}
                     </div>
                     <div className="modern-field">
                       <label>Discharge Date</label>
                       <input
                         type="date"
+                        aria-invalid={Boolean(validationErrors.dischargeDate)}
+                        className={
+                          validationErrors.dischargeDate ? "pr-input--error" : ""
+                        }
                         value={admissionData.dischargeDate}
                         onChange={(e) =>
                           setAdmissionData({
@@ -591,25 +666,50 @@ const Invoice = () => {
                             dischargeDate: e.target.value,
                           })
                         }
+                        onInput={() =>
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            dischargeDate: "",
+                          }))
+                        }
                       />
+                      {validationErrors.dischargeDate && (
+                        <span className="pr-field-error">
+                          {validationErrors.dischargeDate}
+                        </span>
+                      )}
                     </div>
                     <div className="modern-field">
                       <label>Consultant Doctor</label>
                       <select
+                        aria-invalid={Boolean(validationErrors.consultant)}
+                        className={
+                          validationErrors.consultant ? "pr-input--error" : ""
+                        }
                         value={admissionData.consultant}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setAdmissionData({
                             ...admissionData,
                             consultant: e.target.value,
-                          })
-                        }
+                          });
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            consultant: "",
+                          }));
+                        }}
                       >
+                        <option value="">Select consultant doctor</option>
                         {DOCTORS.map((d) => (
                           <option key={d} value={d}>
                             {d}
                           </option>
                         ))}
                       </select>
+                      {validationErrors.consultant && (
+                        <span className="pr-field-error">
+                          {validationErrors.consultant}
+                        </span>
+                      )}
                     </div>
                     <div className="modern-field">
                       <label>Room Type</label>
@@ -1175,7 +1275,7 @@ const Invoice = () => {
                     <div className="review-section">
                       <div className="section-head">
                         <h4>Patient Info</h4>{" "}
-                        <button onClick={() => setActiveStep(1)}>Edit</button>
+                        <button onClick={() => goToStep(1)}>Edit</button>
                       </div>
                       <p>
                         <strong>{selectedPatient?.name}</strong>
@@ -1188,7 +1288,7 @@ const Invoice = () => {
                     <div className="review-section">
                       <div className="section-head">
                         <h4>Admission</h4>{" "}
-                        <button onClick={() => setActiveStep(2)}>Edit</button>
+                        <button onClick={() => goToStep(2)}>Edit</button>
                       </div>
                       <p>
                         {admissionData.admissionDate} to{" "}
@@ -1199,7 +1299,7 @@ const Invoice = () => {
                     <div className="review-section full">
                       <div className="section-head">
                         <h4>Stay & Treatments</h4>{" "}
-                        <button onClick={() => setActiveStep(3)}>Edit</button>
+                        <button onClick={() => goToStep(3)}>Edit</button>
                       </div>
                       <div className="review-list-grid">
                         <div className="review-sublist">
@@ -1253,7 +1353,7 @@ const Invoice = () => {
                 <button
                   className="nav-btn secondary"
                   disabled={activeStep === 1}
-                  onClick={() => setActiveStep((prev) => prev - 1)}
+                  onClick={prevStep}
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -1286,7 +1386,7 @@ const Invoice = () => {
                   {activeStep < 5 ? (
                     <button
                       className="nav-btn primary"
-                      onClick={() => setActiveStep((prev) => prev + 1)}
+                      onClick={nextStep}
                     >
                       Next
                       <svg
