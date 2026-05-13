@@ -118,6 +118,14 @@ const normalizeRoom = (room) => ({
 });
 
 const toNumber = (value) => Number(value) || 0;
+const getInvoiceBillNumber = (invoiceResponse) =>
+  invoiceResponse?.invoice?.bill_no ??
+  invoiceResponse?.invoice?.billNo ??
+  invoiceResponse?.invoice?.billNumber ??
+  invoiceResponse?.billNo ??
+  invoiceResponse?.bill_no ??
+  invoiceResponse?.billNumber ??
+  "-";
 
 const Invoice = () => {
   const dispatch = useDispatch();
@@ -135,6 +143,7 @@ const Invoice = () => {
     treatmentsError,
     createStatus,
     createError,
+    createdInvoice,
   } = useSelector((state) => state.invoice);
   const [activeStep, setActiveStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
@@ -151,7 +160,6 @@ const Invoice = () => {
     consultant: "",
     roomType: ROOM_TYPES[0],
     roomNumber: "ROOM - 01",
-    billNo: "2024/001",
   });
 
   // PAGE 3: Room Charges
@@ -377,6 +385,7 @@ const Invoice = () => {
       (p.mrd || "").toLowerCase().includes(patientSearch.toLowerCase()) ||
       (p.phone || "").includes(patientSearch),
   );
+  const generatedBillNumber = getInvoiceBillNumber(createdInvoice);
 
   const buildInvoicePayload = () => {
     if (!selectedPatient?.id) {
@@ -437,7 +446,6 @@ const Invoice = () => {
       consultant: admissionData.consultant,
       room_type: admissionData.roomType,
       room_number: admissionData.roomNumber,
-      bill_no: admissionData.billNo,
       room_total: totals.roomTotal,
       treatment_total: totals.treatmentTotal,
       extra_total: totals.extraTotal,
@@ -1526,7 +1534,7 @@ const Invoice = () => {
                         <br />
                         Phone: {selectedPatient?.phone || "-"}
                         <br />
-                        Bill No: {admissionData.billNo}
+                        Bill No: {generatedBillNumber}
                       </div>
                     </td>
                     <td className="w-30">
