@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import "../styles/pages/Invoice.css";
 import ayurLogo from "../assets/ayur_logo.png";
 import {
+  createInvoice,
   fetchInvoicePatients,
   fetchInvoiceRooms,
   fetchTreatments
@@ -104,6 +105,8 @@ const normalizeRoom = (room) => ({
   rate: Number(room.rate) || 0,
 });
 
+const toNumber = (value) => Number(value) || 0;
+
 const Invoice = () => {
   const dispatch = useDispatch();
   const {
@@ -118,6 +121,8 @@ const Invoice = () => {
     treatmentsStatus,
     patientsError,
     treatmentsError,
+    createStatus,
+    createError,
   } = useSelector((state) => state.invoice);
   const [activeStep, setActiveStep] = useState(1);
 
@@ -316,6 +321,99 @@ const Invoice = () => {
       (p.mrd || "").toLowerCase().includes(patientSearch.toLowerCase()) ||
       (p.phone || "").includes(patientSearch),
   );
+
+  const buildInvoicePayload = () => {
+    if (!selectedPatient?.id) {
+      throw new Error("Please select a patient before generating the invoice.");
+    }
+
+    if (!admissionData.admissionDate || !admissionData.dischargeDate) {
+      throw new Error("Please enter admission and discharge dates.");
+    }
+
+    const getRoomId = (roomName) =>
+      roomOptions.find((room) => room.name === roomName)?.id;
+
+    const getTreatmentId = (treatmentName) =>
+      treatmentOptions.find((treatment) => treatment.name === treatmentName)
+        ?.id;
+
+    const invoiceRoomCharges = roomCharges
+      .filter((row) => row.room)
+      .map((row) => {
+        const roomId = getRoomId(row.room);
+
+        if (!roomId) {
+          throw new Error(`Please select a valid room for ${row.room}.`);
+        }
+
+        return {
+          room_id: roomId,
+          days: toNumber(row.days),
+          rate: toNumber(row.rate),
+          amount: toNumber(row.amount),
+        };
+      });
+
+    const invoiceTreatmentCharges = treatmentCharges
+      .filter((row) => row.treatment)
+      .map((row) => {
+        const treatmentId = getTreatmentId(row.treatment);
+
+        if (!treatmentId) {
+          throw new Error(
+            `Please select a valid treatment for ${row.treatment}.`,
+          );
+        }
+
+        return {
+          treatment_id: treatmentId,
+          qty: toNumber(row.qty),
+          rate: toNumber(row.rate),
+          amount: toNumber(row.amount),
+        };
+      });
+
+    return {
+      patient_id: selectedPatient.id,
+      admission_date: admissionData.admissionDate,
+      discharge_date: admissionData.dischargeDate,
+      consultant: admissionData.consultant,
+      room_type: admissionData.roomType,
+      room_number: admissionData.roomNumber,
+      bill_no: admissionData.billNo,
+      room_total: totals.roomTotal,
+      treatment_total: totals.treatmentTotal,
+      extra_total: totals.extraTotal,
+      gross_total: totals.gross,
+      total_paid: totals.totalPaid,
+      balance: totals.balance,
+      room_charges: invoiceRoomCharges,
+      treatment_charges: invoiceTreatmentCharges,
+      additional_charges: additionalCharges
+        .filter((row) => row.type)
+        .map((row) => ({
+          type: row.type,
+          amount: toNumber(row.amount),
+        })),
+      payments: payments
+        .filter((row) => row.method)
+        .map((row) => ({
+          method: row.method,
+          amount: toNumber(row.amount),
+        })),
+    };
+  };
+
+  const handleGenerateAndPrint = async () => {
+    try {
+      const payload = buildInvoicePayload();
+      await dispatch(createInvoice(payload)).unwrap();
+      setActiveStep(6);
+    } catch (error) {
+      alert(error?.message || error || "Failed to create invoice");
+    }
+  };
 
   return (
     <div
@@ -1203,7 +1301,8 @@ const Invoice = () => {
                   ) : activeStep === 5 ? (
                     <button
                       className="nav-btn success"
-                      onClick={() => setActiveStep(6)}
+                      disabled={createStatus === "loading"}
+                      onClick={handleGenerateAndPrint}
                     >
                       <svg
                         viewBox="0 0 24 24"
@@ -1214,11 +1313,18 @@ const Invoice = () => {
                         <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
                         <polyline points="13 2 13 9 20 9" />
                       </svg>
-                      Generate & Print
+                      {createStatus === "loading"
+                        ? "Generating..."
+                        : "Generate & Print"}
                     </button>
                   ) : null}
                 </div>
               </div>
+              {activeStep === 5 && createStatus === "failed" && createError && (
+                <p className="no-print" style={{ color: "#b91c1c" }}>
+                  {createError}
+                </p>
+              )}
             </main>
           </div>
         </div>
