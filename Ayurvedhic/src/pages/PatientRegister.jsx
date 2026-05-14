@@ -281,7 +281,7 @@ const PatientRegister = () => {
                   value={formData.name}
                   onChange={handleChange}
                   className={`pr-input${errors.name ? " pr-input--error" : ""}`}
-                  placeholder="e.g. Ramesh Kumar Nair"
+                  placeholder="e.g. John Doe"
                 />
                 {errors.name && (
                   <span className="pr-field-error">{errors.name}</span>
@@ -432,7 +432,7 @@ const PatientRegister = () => {
                   value={formData.houseName}
                   onChange={handleChange}
                   className="pr-input"
-                  placeholder="e.g. Krishna Bhavanam"
+                  placeholder="e.g. Sunrise Villa"
                 />
               </div>
 
@@ -464,7 +464,7 @@ const PatientRegister = () => {
                   value={formData.city}
                   onChange={handleChange}
                   className={`pr-input${errors.city ? " pr-input--error" : ""}`}
-                  placeholder="e.g. Thrissur"
+                  placeholder="e.g. Chennai"
                 />
                 {errors.city && (
                   <span className="pr-field-error">{errors.city}</span>
@@ -483,7 +483,7 @@ const PatientRegister = () => {
                   value={formData.district}
                   onChange={handleChange}
                   className={`pr-input${errors.district ? " pr-input--error" : ""}`}
-                  placeholder="e.g. Thrissur"
+                  placeholder="e.g. Chennai"
                 />
                 {errors.district && (
                   <span className="pr-field-error">{errors.district}</span>
@@ -502,7 +502,7 @@ const PatientRegister = () => {
                   value={formData.state}
                   onChange={handleChange}
                   className={`pr-input${errors.state ? " pr-input--error" : ""}`}
-                  placeholder="e.g. Kerala"
+                  placeholder="e.g. Tamilnadu"
                 />
                 {errors.state && (
                   <span className="pr-field-error">{errors.state}</span>

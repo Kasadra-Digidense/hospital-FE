@@ -42,7 +42,7 @@ const Home = () => {
           </p>
 
           <button className="home-hero-btn" onClick={()=>{
-            navigate("/dashboard")
+            navigate("/login")
           }} >
             Access Dashboard
           </button>
