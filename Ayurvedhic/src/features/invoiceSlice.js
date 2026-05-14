@@ -74,7 +74,13 @@ const initialState = {
 const invoiceSlice = createSlice({
   name: "invoice",
   initialState,
-  reducers: {},
+  reducers: {
+    resetInvoiceCreation: (state) => {
+      state.createStatus = "idle";
+      state.createError = null;
+      state.createdInvoice = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchInvoicePatients.pending, (state) => {
@@ -137,4 +143,5 @@ const invoiceSlice = createSlice({
   },
 });
 
+export const { resetInvoiceCreation } = invoiceSlice.actions;
 export default invoiceSlice.reducer;
