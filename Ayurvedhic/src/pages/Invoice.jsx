@@ -9,6 +9,7 @@ import {
   fetchTreatments,
   resetInvoiceCreation,
 } from "../features/invoiceSlice";
+import { fetchDoctors } from "../features/doctorSlice";
 
 // Constants for Dropdowns
 const DEFAULT_TREATMENT_OPTIONS = [
@@ -31,7 +32,6 @@ const ADDITIONAL_CHARGE_TYPES = [
 ];
 
 const PAYMENT_METHODS = ["Cash", "UPI", "Card"];
-const DOCTORS = ["DR SANAL", "DR ANJALI", "DR KRISHNA"];
 const INITIAL_ADMISSION_DATA = {
   admissionDate: "",
   dischargeDate: "",
@@ -131,6 +131,9 @@ const normalizeRoom = (room) => ({
   rate: Number(room.rate) || 0,
 });
 
+const getDoctorName = (doctor) =>
+  doctor?.doctor_name ?? doctor?.doctorName ?? doctor?.name ?? "";
+
 const toNumber = (value) => Number(value) || 0;
 const getInvoiceBillNumber = (invoiceResponse) =>
   invoiceResponse?.invoice?.bill_no ??
@@ -159,6 +162,8 @@ const Invoice = () => {
     createError,
     createdInvoice,
   } = useSelector((state) => state.invoice);
+  const { doctors, fetchLoading: doctorsLoading, fetchError: doctorsError } =
+    useSelector((state) => state.doctor);
   const [activeStep, setActiveStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
 
@@ -202,6 +207,7 @@ const Invoice = () => {
     if (roomFetchStatus !== "loading" && roomFetchStatus === "idle") {
       dispatch(fetchInvoiceRooms());
     }
+    dispatch(fetchDoctors());
   }, [dispatch]);
 
 
@@ -355,6 +361,11 @@ const Invoice = () => {
   );
 
   const roomOptions = useMemo(() => rooms.map(normalizeRoom), [rooms]);
+
+  const doctorOptions = useMemo(
+    () => doctors.map(getDoctorName).filter(Boolean),
+    [doctors],
+  );
 
   const treatmentOptions = useMemo(() => {
     const treatmentList = Array.isArray(treatments)
@@ -722,30 +733,37 @@ const Invoice = () => {
                     </div>
                     <div className="modern-field">
                       <label>Consultant Doctor</label>
-                      <select
-                        aria-invalid={Boolean(validationErrors.consultant)}
-                        className={
-                          validationErrors.consultant ? "pr-input--error" : ""
-                        }
-                        value={admissionData.consultant}
-                        onChange={(e) => {
-                          setAdmissionData({
-                            ...admissionData,
-                            consultant: e.target.value,
-                          });
-                          setValidationErrors((prev) => ({
-                            ...prev,
-                            consultant: "",
-                          }));
-                        }}
-                      >
-                        <option value="">Select consultant doctor</option>
-                        {DOCTORS.map((d) => (
-                          <option key={d} value={d}>
-                            {d}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="dropdown-input-wrapper doctor-select-wrapper">
+                        <select
+                          aria-invalid={Boolean(validationErrors.consultant)}
+                          className={`doctor-select${validationErrors.consultant ? " pr-input--error" : ""}`}
+                          value={admissionData.consultant}
+                          onChange={(e) => {
+                            setAdmissionData({
+                              ...admissionData,
+                              consultant: e.target.value,
+                            });
+                            setValidationErrors((prev) => ({
+                              ...prev,
+                              consultant: "",
+                            }));
+                          }}
+                        >
+                          <option value="">Select consultant doctor</option>
+                          {doctorOptions.map((d) => (
+                            <option key={d} value={d}>
+                              {d}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="dropdown-chevron" aria-hidden="true">▼</span>
+                      </div>
+                      {doctorsLoading && (
+                        <span className="pr-field-hint">Loading doctors...</span>
+                      )}
+                      {!doctorsLoading && doctorsError && (
+                        <span className="pr-field-error">{doctorsError}</span>
+                      )}
                       {validationErrors.consultant && (
                         <span className="pr-field-error">
                           {validationErrors.consultant}
