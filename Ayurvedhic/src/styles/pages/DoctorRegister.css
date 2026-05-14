@@ -3,13 +3,15 @@
   --primary-dark: #145A36;
   --primary-light: #E8F5EE;
   --accent-saffron: #F28C28;
+  --error: #dc2626;
+  --error-bg: #fff5f5;
   --glass-bg: rgba(255, 255, 255, 0.9);
   --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 .dr-container {
-  padding: 1.5rem 2rem;
+  padding: 24px 28px;
   max-width: 1400px;
   margin: 0 auto;
   height: calc(100vh - 4rem);
@@ -30,16 +32,16 @@
 }
 
 .dr-title {
-  font-size: 2.5rem;
-  font-weight: 800;
+  font-size: 28px;
+  font-weight: 700;
   color: var(--primary-green);
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.025em;
+  margin-bottom: 6px;
+  letter-spacing: 0;
 }
 
 .dr-subtitle {
   color: #64748b;
-  font-size: 1.1rem;
+  font-size: 14px;
 }
 
 .dr-layout {
@@ -54,8 +56,8 @@
   background: var(--glass-bg);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 1.5rem;
-  padding: 2rem;
+  border-radius: 14px;
+  padding: 24px;
   box-shadow: var(--shadow-md);
 }
 
@@ -63,8 +65,8 @@
   display: block;
   font-weight: 600;
   color: #334155;
-  margin-bottom: 0.75rem;
-  font-size: 0.95rem;
+  margin-bottom: 6px;
+  font-size: 13px;
 }
 
 .dr-input-wrapper {
@@ -72,36 +74,49 @@
   display: flex;
   align-items: center;
   background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 1rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
   transition: all 0.3s ease;
   overflow: hidden;
 }
 
 .dr-input-wrapper:focus-within {
   border-color: var(--primary-green);
-  box-shadow: 0 0 0 4px rgba(31, 122, 77, 0.1);
+  box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.1);
   background: white;
+}
+
+.dr-input-wrapper--error {
+  border-color: var(--error);
+  background: var(--error-bg);
+}
+
+.dr-input-wrapper--error:focus-within {
+  border-color: var(--error);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .dr-prefix {
   background: #e2e8f0;
-  padding: 0.75rem 1rem;
+  padding: 10px 12px;
   color: var(--primary-green);
-  font-weight: 700;
-  font-size: 1rem;
-  border-right: 1px solid #cbd5e1;
+  font-weight: 600;
+  font-size: 13px;
+  border-right: 1.5px solid #cbd5e1;
+  display: flex;
+  align-items: center;
 }
 
 .dr-input {
   width: 100%;
-  padding: 0.75rem 1.25rem;
+  padding: 11px 14px;
   border: none;
   background: transparent;
   outline: none;
-  font-size: 1rem;
+  font-size: 14px;
   color: #1e293b;
-  font-weight: 500;
+  font-weight: 400;
+  box-sizing: border-box;
 }
 
 .dr-btn-container {
@@ -112,13 +127,13 @@
 
 .dr-submit-btn {
   width: auto;
-  min-width: 200px;
-  padding: 0.85rem 2.5rem;
+  min-width: 170px;
+  padding: 12px 22px;
   background: var(--primary-green);
   color: white;
   border: none;
-  border-radius: 1rem;
-  font-size: 1rem;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -184,9 +199,9 @@
 
 /* List Styles */
 .dr-list-title {
-  font-size: 1.5rem;
+  font-size: 20px;
   color: var(--primary-green);
-  margin-bottom: 1.5rem;
+  margin-bottom: 18px;
   font-weight: 700;
 }
 
@@ -211,17 +226,18 @@
 .dr-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1rem;
-  padding: 0.5rem;
+  gap: 12px;
+  padding: 4px;
 }
 
 .dr-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  gap: 10px;
+  min-height: 58px;
+  padding: 10px 12px;
   background: #f1f5f9;
-  border-radius: 1rem;
+  border-radius: 10px;
   border: 1px solid transparent;
   transition: all 0.3s ease;
 }
@@ -234,8 +250,8 @@
 }
 
 .dr-avatar {
-  width: 45px;
-  height: 45px;
+  width: 36px;
+  height: 36px;
   background: var(--primary-green);
   color: white;
   display: flex;
@@ -243,23 +259,28 @@
   justify-content: center;
   border-radius: 50%;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
 .dr-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  flex: 1;
 }
 
 .dr-item-name {
-  font-weight: 700;
+  font-weight: 600;
   color: #1e293b;
-  font-size: 1.05rem;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dr-item-tag {
-  font-size: 0.8rem;
+  font-size: 11px;
   color: #64748b;
   font-weight: 500;
 }
@@ -269,4 +290,225 @@
   color: #94a3b8;
   padding: 3rem 0;
   font-style: italic;
+}
+
+.dr-error {
+  color: var(--error);
+}
+
+.dr-field-error {
+  font-size: 12px;
+  color: var(--error);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.dr-field-error::before {
+  content: '⚠';
+  font-size: 11px;
+}
+
+.dr-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.dr-icon-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #dbe4ec;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dr-icon-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dr-icon-btn:hover:not(:disabled) {
+  background: var(--primary-light);
+  border-color: rgba(31, 122, 77, 0.25);
+  color: var(--primary-green);
+  transform: translateY(-1px);
+}
+
+.dr-icon-btn--danger:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.dr-icon-btn--save {
+  background: var(--primary-green);
+  border-color: var(--primary-green);
+  color: #ffffff;
+}
+
+.dr-icon-btn--save:hover:not(:disabled) {
+  background: var(--primary-dark);
+  color: #ffffff;
+}
+
+.dr-icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.dr-item--editing {
+  background: #ffffff;
+  border-color: rgba(31, 122, 77, 0.25);
+}
+
+.dr-edit-input {
+  width: 100%;
+  min-width: 0;
+  border: 1.5px solid #dbe4ec;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: #1e293b;
+  background: #fafcfb;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.dr-edit-input:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.1);
+  background: #ffffff;
+}
+
+.dr-edit-input--error {
+  border-color: var(--error);
+  background: var(--error-bg);
+}
+
+.dr-edit-input--error:focus {
+  border-color: var(--error);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.dr-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(15, 23, 42, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.dr-confirm-modal {
+  width: min(420px, 100%);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+  padding: 22px;
+}
+
+.dr-confirm-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #b91c1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.dr-confirm-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dr-confirm-content h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.dr-confirm-content p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.dr-confirm-content strong {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.dr-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.dr-modal-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.dr-modal-btn--ghost {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #dbe4ec;
+}
+
+.dr-modal-btn--ghost:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.dr-modal-btn--danger {
+  background: #b91c1c;
+  color: #ffffff;
+  border: 1px solid #b91c1c;
+}
+
+.dr-modal-btn--danger:hover:not(:disabled) {
+  background: #991b1b;
+  border-color: #991b1b;
+}
+
+.dr-modal-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }

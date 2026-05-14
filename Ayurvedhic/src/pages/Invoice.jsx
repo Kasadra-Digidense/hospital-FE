@@ -6,8 +6,8 @@ import {
   createInvoice,
   fetchInvoicePatients,
   fetchInvoiceRooms,
-  fetchTreatments
-  
+  fetchTreatments,
+  resetInvoiceCreation,
 } from "../features/invoiceSlice";
 
 // Constants for Dropdowns
@@ -31,8 +31,22 @@ const ADDITIONAL_CHARGE_TYPES = [
 ];
 
 const PAYMENT_METHODS = ["Cash", "UPI", "Card"];
-const ROOM_TYPES = ["Non AC Big", "Non AC Small", "AC Deluxe", "General Ward"];
 const DOCTORS = ["DR SANAL", "DR ANJALI", "DR KRISHNA"];
+const INITIAL_ADMISSION_DATA = {
+  admissionDate: "",
+  dischargeDate: "",
+  consultant: "",
+};
+const createInitialRoomCharges = () => [
+  { room: "", days: 0, rate: 0, amount: 0, showList: false },
+];
+const createInitialTreatmentCharges = () => [
+  { treatment: "", qty: 0, rate: 0, amount: 0, showList: false },
+];
+const createInitialAdditionalCharges = () => [
+  { type: "Doctor Fee", amount: 0 },
+];
+const createInitialPayments = () => [{ method: "Cash", amount: 0 }];
 
 const buildPatientAddress = (address = {}, fallbackPlace = "") => {
   const parts = [
@@ -154,31 +168,23 @@ const Invoice = () => {
   const [showPatientList, setShowPatientList] = useState(false);
 
   // PAGE 2: Admission Data
-  const [admissionData, setAdmissionData] = useState({
-    admissionDate: "",
-    dischargeDate: "",
-    consultant: "",
-    roomType: ROOM_TYPES[0],
-    roomNumber: "ROOM - 01",
-  });
+  const [admissionData, setAdmissionData] = useState(INITIAL_ADMISSION_DATA);
 
   // PAGE 3: Room Charges
-  const [roomCharges, setRoomCharges] = useState([
-    { room: "", days: 0, rate: 0, amount: 0, showList: false },
-  ]);
+  const [roomCharges, setRoomCharges] = useState(createInitialRoomCharges);
 
   // PAGE 4: Treatment Charges
-  const [treatmentCharges, setTreatmentCharges] = useState([
-    { treatment: "", qty: 0, rate: 0, amount: 0, showList: false },
-  ]);
+  const [treatmentCharges, setTreatmentCharges] = useState(
+    createInitialTreatmentCharges,
+  );
 
   // PAGE 5: Additional Charges
-  const [additionalCharges, setAdditionalCharges] = useState([
-    { type: "Doctor Fee", amount: 0 },
-  ]);
+  const [additionalCharges, setAdditionalCharges] = useState(
+    createInitialAdditionalCharges,
+  );
 
   // PAGE 6: Payment Details
-  const [payments, setPayments] = useState([{ method: "Cash", amount: 0 }]);
+  const [payments, setPayments] = useState(createInitialPayments);
 
   // LOGIC: Days Calculation
   const calculatedDays = useMemo(() => {
@@ -350,17 +356,6 @@ const Invoice = () => {
 
   const roomOptions = useMemo(() => rooms.map(normalizeRoom), [rooms]);
 
-  const roomTypeOptions = useMemo(() => {
-    const apiRoomTypes = roomOptions.map((room) => room.group).filter(Boolean);
-    return [...new Set([...apiRoomTypes, ...ROOM_TYPES])];
-  }, [roomOptions]);
-
-  const admissionRoomOptions = useMemo(() => {
-    const filteredRooms = roomOptions.filter(
-      (room) => room.group === admissionData.roomType,
-    );
-    return filteredRooms.length > 0 ? filteredRooms : roomOptions;
-  }, [admissionData.roomType, roomOptions]);
   const treatmentOptions = useMemo(() => {
     const treatmentList = Array.isArray(treatments)
       ? treatments
@@ -444,8 +439,6 @@ const Invoice = () => {
       admission_date: admissionData.admissionDate,
       discharge_date: admissionData.dischargeDate,
       consultant: admissionData.consultant,
-      room_type: admissionData.roomType,
-      room_number: admissionData.roomNumber,
       room_total: totals.roomTotal,
       treatment_total: totals.treatmentTotal,
       extra_total: totals.extraTotal,
@@ -477,6 +470,30 @@ const Invoice = () => {
     } catch (error) {
       alert(error?.message || error || "Failed to create invoice");
     }
+  };
+
+  const resetInvoiceForm = () => {
+    setActiveStep(1);
+    setValidationErrors({});
+    setSelectedPatient(null);
+    setPatientSearch("");
+    setShowPatientList(false);
+    setAdmissionData(INITIAL_ADMISSION_DATA);
+    setRoomCharges(createInitialRoomCharges());
+    setTreatmentCharges(createInitialTreatmentCharges());
+    setAdditionalCharges(createInitialAdditionalCharges());
+    setPayments(createInitialPayments());
+    dispatch(resetInvoiceCreation());
+  };
+
+  const handlePrintInvoice = () => {
+    const resetAfterPrint = () => {
+      window.removeEventListener("afterprint", resetAfterPrint);
+      resetInvoiceForm();
+    };
+
+    window.addEventListener("afterprint", resetAfterPrint);
+    window.print();
   };
 
   return (
@@ -734,44 +751,6 @@ const Invoice = () => {
                           {validationErrors.consultant}
                         </span>
                       )}
-                    </div>
-                    <div className="modern-field">
-                      <label>Room Type</label>
-                      <select
-                        value={admissionData.roomType}
-                        onChange={(e) =>
-                          setAdmissionData({
-                            ...admissionData,
-                            roomType: e.target.value,
-                            roomNumber: "",
-                          })
-                        }
-                      >
-                        {roomTypeOptions.map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="modern-field">
-                      <label>Room Number</label>
-                      <select
-                        value={admissionData.roomNumber}
-                        onChange={(e) =>
-                          setAdmissionData({
-                            ...admissionData,
-                            roomNumber: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="">Select room</option>
-                        {admissionRoomOptions.map((room) => (
-                          <option key={room.id} value={room.name}>
-                            {room.name}
-                          </option>
-                        ))}
-                      </select>
                     </div>
                     <div className="modern-field readonly">
                       <label>Calculated Days</label>
@@ -1459,22 +1438,7 @@ const Invoice = () => {
       {activeStep === 6 && (
         <div className="bill-preview-overlay">
           <div className="bill-preview-actions no-print">
-            <button
-              className="nav-btn secondary"
-              onClick={() => setActiveStep(5)}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" />
-              </svg>
-              Back to Review
-            </button>
-
-            <button className="nav-btn success" onClick={() => window.print()}>
+            <button className="nav-btn success" onClick={handlePrintInvoice}>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -1543,6 +1507,8 @@ const Invoice = () => {
                         Adm: {admissionData.admissionDate}
                         <br />
                         Dis: {admissionData.dischargeDate}
+                        <br />
+                        Days: {calculatedDays}
                         <br />
                         Doc: {admissionData.consultant}
                       </div>
