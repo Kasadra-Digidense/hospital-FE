@@ -135,6 +135,11 @@ const getDoctorName = (doctor) =>
   doctor?.doctor_name ?? doctor?.doctorName ?? doctor?.name ?? "";
 
 const toNumber = (value) => Number(value) || 0;
+const clampNonNegative = (value) => {
+  const n = Number(value);
+  if (Number.isNaN(n)) return 0;
+  return n < 0 ? 0 : n;
+};
 const getInvoiceBillNumber = (invoiceResponse) =>
   invoiceResponse?.invoice?.bill_no ??
   invoiceResponse?.invoice?.billNo ??
@@ -311,6 +316,10 @@ const Invoice = () => {
 
   const handleRoomRowChange = (index, field, value) => {
     const newRows = [...roomCharges];
+    // Ensure numeric fields are non-negative
+    if (field === "days" || field === "rate") {
+      value = clampNonNegative(value);
+    }
     newRows[index][field] = value;
 
     if (field === "room") {
@@ -321,14 +330,18 @@ const Invoice = () => {
 
     if (field === "days" || field === "rate") {
       newRows[index].amount =
-        (parseFloat(newRows[index].days) || 0) *
-        (parseFloat(newRows[index].rate) || 0);
+        Math.max(0, (parseFloat(newRows[index].days) || 0)) *
+        Math.max(0, (parseFloat(newRows[index].rate) || 0));
     }
     setRoomCharges(newRows);
   };
 
   const handleTreatmentRowChange = (index, field, value) => {
     const newRows = [...treatmentCharges];
+    // Ensure numeric fields are non-negative
+    if (field === "qty" || field === "rate") {
+      value = clampNonNegative(value);
+    }
     newRows[index][field] = value;
 
     if (field === "treatment") {
@@ -349,8 +362,8 @@ const Invoice = () => {
     }
     if (field === "qty" || field === "rate") {
       newRows[index].amount =
-        (parseFloat(newRows[index].qty) || 0) *
-        (parseFloat(newRows[index].rate) || 0);
+        Math.max(0, (parseFloat(newRows[index].qty) || 0)) *
+        Math.max(0, (parseFloat(newRows[index].rate) || 0));
     }
     setTreatmentCharges(newRows);
   };
@@ -894,6 +907,7 @@ const Invoice = () => {
                             <td>
                               <input
                                 type="number"
+                                min="0"
                                 value={row.days}
                                 onChange={(e) =>
                                   handleRoomRowChange(
@@ -907,6 +921,7 @@ const Invoice = () => {
                             <td>
                               <input
                                 type="number"
+                                min="0"
                                 value={row.rate}
                                 onChange={(e) =>
                                   handleRoomRowChange(
@@ -1053,6 +1068,7 @@ const Invoice = () => {
                             <td>
                               <input
                                 type="number"
+                                min="0"
                                 value={row.qty}
                                 onChange={(e) =>
                                   handleTreatmentRowChange(
@@ -1066,6 +1082,7 @@ const Invoice = () => {
                             <td>
                               <input
                                 type="number"
+                                min="0"
                                 value={row.rate}
                                 onChange={(e) =>
                                   handleTreatmentRowChange(
@@ -1152,10 +1169,13 @@ const Invoice = () => {
                             <td>
                               <input
                                 type="number"
+                                min="0"
                                 value={row.amount}
                                 onChange={(e) => {
                                   const newRows = [...additionalCharges];
-                                  newRows[index].amount = e.target.value;
+                                  newRows[index].amount = clampNonNegative(
+                                    e.target.value,
+                                  );
                                   setAdditionalCharges(newRows);
                                 }}
                               />
@@ -1232,10 +1252,13 @@ const Invoice = () => {
                               <td>
                                 <input
                                   type="number"
+                                  min="0"
                                   value={row.amount}
                                   onChange={(e) => {
                                     const newRows = [...payments];
-                                    newRows[index].amount = e.target.value;
+                                    newRows[index].amount = clampNonNegative(
+                                      e.target.value,
+                                    );
                                     setPayments(newRows);
                                   }}
                                 />
