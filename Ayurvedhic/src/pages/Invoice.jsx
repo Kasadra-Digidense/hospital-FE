@@ -1455,189 +1455,187 @@ const Invoice = () => {
       {/* PAGE 6: Printable Invoice */}
       {activeStep === 6 && (
         <div className="bill-preview-overlay">
+          {/* Action Bar */}
           <div className="bill-preview-actions no-print">
+            <div className="bill-action-left">
+              <span className="bill-ready-badge">✓ Invoice Ready</span>
+              <span className="bill-no-tag">Bill No: {generatedBillNumber}</span>
+            </div>
             <button className="nav-btn success" onClick={handlePrintInvoice}>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
               </svg>
               Print Invoice
             </button>
           </div>
 
+          {/* Printable A4 Bill */}
           <div className="printable-bill">
-            <div className="bill-header">
-              <div className="bill-logo-section">
-                <div className="bill-symbol-wrapper">
-                  <img src={ayurLogo} alt="Logo" />
-                </div>
-                <div className="bill-brand-text">
-                  <h2 className="bill-title-anj">ANJANEYAM</h2>
-                  <p className="bill-subtitle-ayu">ayurvedic Hospital</p>
-                </div>
-              </div>
-              <div className="bill-hospital-info">
-                <p>Machiyil, Padiyottuchal, Kannur</p>
-                <p>Mob: +91 6282 422 323, +91 4985 294 222</p>
-                <p>care@anjaneyamhospital.com</p>
-                <p>www.anjaneyamhospital.com</p>
-              </div>
-            </div>
 
-            <div className="bill-discharge-title">
-              <h3>DISCHARGE BILL</h3>
-            </div>
-
-            <div className="bill-patient-info-table">
-              <table className="info-table">
-                <tbody>
-                  <tr>
-                    <td className="w-40">
-                      <strong>Patient Name & Address</strong>
-                      <div className="info-content">
-                        {selectedPatient?.name}
-                        <br />
-                        {selectedPatient?.address}
-                        <br />
-                        Age: {selectedPatient?.age} | Gender:{" "}
-                        {selectedPatient?.gender}
-                      </div>
-                    </td>
-                    <td className="w-30">
-                      <strong>Hospital Reference</strong>
-                      <div className="info-content">
-                        MRD No: {selectedPatient?.mrd}
-                        <br />
-                        IP No: {selectedPatient?.ipNumber || "-"}
-                        <br />
-                        Phone: {selectedPatient?.phone || "-"}
-                        <br />
-                        Bill No: {generatedBillNumber}
-                      </div>
-                    </td>
-                    <td className="w-30">
-                      <strong>Stay Details</strong>
-                      <div className="info-content">
-                        Adm: {admissionData.admissionDate}
-                        <br />
-                        Dis: {admissionData.dischargeDate}
-                        <br />
-                        Days: {calculatedDays}
-                        <br />
-                        Doc: {admissionData.consultant}
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="bill-items-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th className="text-left">Description of Services</th>
-                    <th className="w-10">Qty</th>
-                    <th className="w-15">Rate (INR)</th>
-                    <th className="w-20">Amount (INR)</th>
-                    <th className="w-20">Total (INR)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="section-header-row">
-                    <td colSpan="5" className="text-left">
-                      Room & Accomodation Charges
-                    </td>
-                  </tr>
-                  {roomCharges.map((item, index) => (
-                    <tr key={`room-${index}`}>
-                      <td className="text-left">{item.room}</td>
-                      <td>{item.days}</td>
-                      <td>{parseFloat(item.rate).toFixed(2)}</td>
-                      <td>{parseFloat(item.amount).toFixed(2)}</td>
-                      <td>
-                        {index === roomCharges.length - 1
-                          ? totals.roomTotal.toFixed(2)
-                          : ""}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="section-header-row">
-                    <td colSpan="5" className="text-left">
-                      Treatment & Procedural Charges
-                    </td>
-                  </tr>
-                  {treatmentCharges.map((item, index) => (
-                    <tr key={`treat-${index}`}>
-                      <td className="text-left">{item.treatment}</td>
-                      <td>{item.qty}</td>
-                      <td>{parseFloat(item.rate).toFixed(2)}</td>
-                      <td>{parseFloat(item.amount).toFixed(2)}</td>
-                      <td>
-                        {index === treatmentCharges.length - 1
-                          ? totals.treatmentTotal.toFixed(2)
-                          : ""}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="section-header-row">
-                    <td colSpan="5" className="text-left">
-                      Other Charges & Fees
-                    </td>
-                  </tr>
-                  {additionalCharges.map((item, index) => (
-                    <tr key={`extra-${index}`}>
-                      <td className="text-left" colSpan="4">
-                        {item.type}
-                      </td>
-                      <td>{parseFloat(item.amount).toFixed(2)}</td>
-                    </tr>
-                  ))}
-
-                  <tr className="bill-total-row grand-total-row">
-                    <td className="total-label" colSpan="4">
-                      GROSS TOTAL
-                    </td>
-                    <td className="total-amount">{totals.gross.toFixed(2)}</td>
-                  </tr>
-                  <tr className="bill-total-row">
-                    <td className="total-label" colSpan="4">
-                      PAYMENTS (CASH/UPI/CARD) (-)
-                    </td>
-                    <td>{totals.currentPaid.toFixed(2)}</td>
-                  </tr>
-                  <tr className="bill-total-row grand-total-row">
-                    <td className="total-label" colSpan="4">
-                      BALANCE DUE
-                    </td>
-                    <td className="total-amount">
-                      {totals.balance.toFixed(2)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="bill-footer">
-              <div className="footer-top-row">
-                <div className="footer-note">
-                  I Agree that I am responsible for the full payment of the bill
-                  in the event it is not paid by the company or person
-                  indicated.
-                </div>
-                <div className="footer-empty"></div>
-                <div className="footer-auth">Auth. Signatory</div>
-                <div className="footer-prepared">
-                  <p className="prepared-by-label">PREPARED BY</p>
-                  {/* <p className="preparer-name">SHIJITHA SUMESH</p> */}
+            {/* ── HEADER ── */}
+            <div className="pb-header">
+              <div className="pb-logo-block">
+                <img src={ayurLogo} alt="Anjaneyam Logo" className="pb-logo-img" />
+                <div>
+                  <div className="pb-hospital-name">ANJANEYAM</div>
+                  <div className="pb-hospital-tag">Ayurvedic Hospital</div>
                 </div>
               </div>
-              {/* <div className="page-number">Page 1</div> */}
+              <div className="pb-contact-block">
+                <div className="pb-contact-line">Machiyil, Padiyottuchal, Kannur</div>
+                <div className="pb-contact-line">+91 6282 422 323 &nbsp;|&nbsp; +91 4985 294 222</div>
+                <div className="pb-contact-line">care@anjaneyamhospital.com</div>
+                <div className="pb-contact-line">www.anjaneyamhospital.com</div>
+              </div>
             </div>
+
+            {/* ── TITLE BAND ── */}
+            <div className="pb-title-band">
+              <span>DISCHARGE BILL</span>
+              <span className="pb-bill-no">Bill No: {generatedBillNumber}</span>
+            </div>
+
+            {/* ── PATIENT INFO ── */}
+            <div className="pb-info-grid">
+              <div className="pb-info-cell">
+                <div className="pb-cell-label">Patient Details</div>
+                <div className="pb-cell-name">{selectedPatient?.name}</div>
+                <div className="pb-cell-sub">Age: {selectedPatient?.age} &nbsp;|&nbsp; {selectedPatient?.gender}</div>
+                <div className="pb-cell-sub">{selectedPatient?.address}</div>
+                <div className="pb-cell-sub">Phone: {selectedPatient?.phone || "—"}</div>
+              </div>
+              <div className="pb-info-cell">
+                <div className="pb-cell-label">Hospital Reference</div>
+                <div className="pb-kv"><span>MRD No.</span><strong>{selectedPatient?.mrd}</strong></div>
+                <div className="pb-kv"><span>IP No.</span><strong>{selectedPatient?.ipNumber || "—"}</strong></div>
+                <div className="pb-kv"><span>Consultant</span><strong>{admissionData.consultant}</strong></div>
+              </div>
+              <div className="pb-info-cell">
+                <div className="pb-cell-label">Admission Details</div>
+                <div className="pb-kv"><span>Admitted</span><strong>{admissionData.admissionDate}</strong></div>
+                <div className="pb-kv"><span>Discharged</span><strong>{admissionData.dischargeDate}</strong></div>
+                <div className="pb-kv"><span>Total Stay</span><strong>{calculatedDays} {calculatedDays === 1 ? "Day" : "Days"}</strong></div>
+              </div>
+            </div>
+
+            {/* ── CHARGES TABLE ── */}
+            <table className="pb-table">
+              <thead>
+                <tr>
+                  <th className="pb-th-desc">Description</th>
+                  <th className="pb-th-num">Qty / Days</th>
+                  <th className="pb-th-num">Rate (₹)</th>
+                  <th className="pb-th-num">Amount (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Room Charges */}
+                <tr className="pb-section-row">
+                  <td colSpan="4">Room &amp; Accommodation</td>
+                </tr>
+                {roomCharges.filter(r => r.room).map((item, i) => (
+                  <tr key={`r-${i}`} className="pb-data-row">
+                    <td className="pb-td-desc">{item.room}</td>
+                    <td className="pb-td-num">{item.days}</td>
+                    <td className="pb-td-num">{parseFloat(item.rate).toFixed(2)}</td>
+                    <td className="pb-td-num">{parseFloat(item.amount).toFixed(2)}</td>
+                  </tr>
+                ))}
+                <tr className="pb-subtotal-row">
+                  <td colSpan="3">Room Subtotal</td>
+                  <td className="pb-td-num">{totals.roomTotal.toFixed(2)}</td>
+                </tr>
+
+                {/* Treatment Charges */}
+                <tr className="pb-section-row">
+                  <td colSpan="4">Treatments &amp; Procedures</td>
+                </tr>
+                {treatmentCharges.filter(t => t.treatment).map((item, i) => (
+                  <tr key={`t-${i}`} className="pb-data-row">
+                    <td className="pb-td-desc">{item.treatment}</td>
+                    <td className="pb-td-num">{item.qty}</td>
+                    <td className="pb-td-num">{parseFloat(item.rate).toFixed(2)}</td>
+                    <td className="pb-td-num">{parseFloat(item.amount).toFixed(2)}</td>
+                  </tr>
+                ))}
+                <tr className="pb-subtotal-row">
+                  <td colSpan="3">Treatment Subtotal</td>
+                  <td className="pb-td-num">{totals.treatmentTotal.toFixed(2)}</td>
+                </tr>
+
+                {/* Additional Charges */}
+                {additionalCharges.some(a => parseFloat(a.amount) > 0) && (
+                  <>
+                    <tr className="pb-section-row">
+                      <td colSpan="4">Other Charges &amp; Fees</td>
+                    </tr>
+                    {additionalCharges.filter(a => a.type).map((item, i) => (
+                      <tr key={`e-${i}`} className="pb-data-row">
+                        <td className="pb-td-desc" colSpan="3">{item.type}</td>
+                        <td className="pb-td-num">{parseFloat(item.amount).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    <tr className="pb-subtotal-row">
+                      <td colSpan="3">Other Charges Subtotal</td>
+                      <td className="pb-td-num">{totals.extraTotal.toFixed(2)}</td>
+                    </tr>
+                  </>
+                )}
+              </tbody>
+            </table>
+
+            {/* ── FINANCIAL SUMMARY ── */}
+            <div className="pb-summary-wrap">
+              {/* Payment Breakdown */}
+              <div className="pb-payment-breakdown">
+                <div className="pb-breakdown-title">Payment Details</div>
+                {payments.filter(p => parseFloat(p.amount) > 0).map((p, i) => (
+                  <div key={i} className="pb-breakdown-row">
+                    <span>{p.method}</span>
+                    <span>₹ {parseFloat(p.amount).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Totals Box */}
+              <div className="pb-totals-box">
+                <div className="pb-total-row pb-gross-row">
+                  <span>Gross Total</span>
+                  <span>₹ {totals.gross.toFixed(2)}</span>
+                </div>
+                <div className="pb-total-row pb-deduct-row">
+                  <span>Amount Paid (–)</span>
+                  <span>₹ {totals.currentPaid.toFixed(2)}</span>
+                </div>
+                <div className="pb-total-divider" />
+                <div className={`pb-total-row pb-balance-row ${totals.balance > 0 ? "pb-balance-due" : "pb-balance-clear"}`}>
+                  <span>Balance Due</span>
+                  <strong>₹ {totals.balance.toFixed(2)}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* ── FOOTER ── */}
+            <div className="pb-footer">
+              <div className="pb-footer-note">
+                I agree that I am responsible for the full payment of this bill in the event it is not paid by the company or person indicated.
+              </div>
+              <div className="pb-sig-row">
+                <div className="pb-sig-block">
+                  <div className="pb-sig-line" />
+                  <div className="pb-sig-label">Patient / Attender</div>
+                </div>
+                <div className="pb-sig-block">
+                  <div className="pb-sig-line" />
+                  <div className="pb-sig-label">Prepared By</div>
+                </div>
+                <div className="pb-sig-block">
+                  <div className="pb-sig-line" />
+                   <div className="pb-sig-label">Authorised Signatory</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 /* --- WIZARD LAYOUT --- */
 .invoice-container {
     min-height: 100vh;
@@ -803,148 +805,424 @@
     animation: slideUp 0.4s ease-out;
 }
 
-/* --- PRINT VIEW STYLES --- */
+/* ================================================
+   PRINT BILL PREVIEW OVERLAY
+   ================================================ */
 .bill-preview-overlay {
-    background: #525659;
+    background: #3d4043;
     min-height: 100vh;
-    padding: 40px;
+    padding: 36px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    z-index: 1000;
+    gap: 24px;
 }
 
+/* Action toolbar above the bill */
 .bill-preview-actions {
     width: 100%;
-    max-width: 800px;
+    max-width: 794px;
     display: flex;
     justify-content: space-between;
-    margin-bottom: 30px;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px 30px;
-    border-radius: 20px;
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    align-items: center;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 16px 28px;
+    border-radius: 14px;
+    backdrop-filter: blur(12px);
 }
 
-.bill-preview-actions .nav-btn {
-    padding: 14px 40px;
-    font-size: 16px;
+.bill-action-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.bill-ready-badge {
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+}
+
+.bill-no-tag {
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* ── A4 BILL SHEET ── */
+.printable-bill {
+    width: 794px;         /* ~210mm at 96dpi */
+    min-height: 1123px;   /* ~297mm at 96dpi */
+    background: #fff;
+    padding: 40px 48px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    color: #1a1a1a;
+}
+
+/* ── HEADER ── */
+.pb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 18px;
+    border-bottom: 2.5px solid var(--primary, #1F7A4D);
+    margin-bottom: 14px;
+}
+
+.pb-logo-block {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.pb-logo-img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+}
+
+.pb-hospital-name {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--primary, #1F7A4D);
+    letter-spacing: -0.5px;
+    line-height: 1;
+}
+
+.pb-hospital-tag {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+}
+
+.pb-contact-block {
+    text-align: right;
+}
+
+.pb-contact-line {
+    font-size: 11px;
+    color: #4b5563;
+    line-height: 1.8;
+}
+
+/* ── TITLE BAND ── */
+.pb-title-band {
+    background: var(--primary, #1F7A4D);
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 18px;
+    border-radius: 6px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.pb-bill-no {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.9;
     letter-spacing: 0.5px;
 }
 
-.printable-bill {
-    width: 210mm;
-    min-height: 297mm;
-    background: white;
-    padding: 15mm;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    display: flex;
-    flex-direction: column;
+/* ── PATIENT INFO GRID ── */
+.pb-info-grid {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 1.2fr;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 22px;
 }
 
-/* Header */
-.bill-header {
+.pb-info-cell {
+    padding: 12px 14px;
+    border-right: 1px solid #d1d5db;
+    font-size: 11.5px;
+    line-height: 1.6;
+}
+
+.pb-info-cell:last-child {
+    border-right: none;
+}
+
+.pb-cell-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #6b7280;
+    margin-bottom: 5px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.pb-cell-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 3px;
+}
+
+.pb-cell-sub {
+    font-size: 11px;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+.pb-kv {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 10mm;
-    border-bottom: 2px solid var(--primary);
-    padding-bottom: 5mm;
+    font-size: 11px;
+    margin-bottom: 3px;
+    gap: 6px;
 }
 
-.bill-logo-section {
+.pb-kv span {
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+.pb-kv strong {
+    color: #111827;
+    text-align: right;
+}
+
+/* ── CHARGES TABLE ── */
+.pb-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 12px;
+}
+
+.pb-th-desc,
+.pb-th-num {
+    padding: 8px 12px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #374151;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+}
+
+.pb-th-desc { text-align: left; width: 48%; }
+.pb-th-num  { text-align: center; }
+
+/* Category Section Row */
+.pb-section-row td {
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    padding: 6px 12px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--primary, #1F7A4D);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Data Rows */
+.pb-data-row td {
+    border: 1px solid #e5e7eb;
+    padding: 6px 12px;
+    font-size: 11.5px;
+    color: #1f2937;
+}
+
+.pb-td-desc { text-align: left; }
+.pb-td-num  { text-align: center; }
+
+/* Subtotal Rows */
+.pb-subtotal-row td {
+    border: 1px solid #d1d5db;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #374151;
+    background: #f9fafb;
+    text-align: right;
+}
+
+.pb-subtotal-row td:last-child {
+    text-align: center;
+    color: var(--primary, #1F7A4D);
+}
+
+/* ── FINANCIAL SUMMARY ── */
+.pb-summary-wrap {
     display: flex;
-    align-items: center;
-    gap: 15px;
+    gap: 16px;
+    margin-bottom: 24px;
+    align-items: flex-start;
 }
 
-.bill-symbol-wrapper img { width: 60px; height: 60px; }
-.bill-title-anj { margin: 0; font-size: 32px; color: var(--secondary); letter-spacing: -1px; }
-.bill-subtitle-ayu { margin: 0; font-size: 14px; color: var(--primary); text-transform: uppercase; font-weight: 700; }
-
-.bill-discharge-title { text-align: center; margin-bottom: 5mm; }
-.bill-discharge-title h3 {
-    display: inline-block;
-    border-bottom: 2px solid #333;
-    padding-bottom: 2px;
-    margin: 0;
+.pb-payment-breakdown {
+    flex: 1;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px 16px;
+    background: #fafafa;
 }
 
-.info-table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; }
-.info-table td { border: 1px solid #ddd; padding: 3mm; vertical-align: top; font-size: 11px; line-height: 1.4; }
-.info-content { margin-top: 2mm; }
+.pb-breakdown-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: #6b7280;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e7eb;
+}
 
-.bill-items-table table { width: 100%; border-collapse: collapse; }
-.bill-items-table th { background: #f4f4f4; border: 1px solid #ddd; padding: 2mm; font-size: 11px; }
-.bill-items-table td { border: 1px solid #ddd; padding: 2mm; font-size: 11px; text-align: center; }
-.text-left { text-align: left !important; }
+.pb-breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #374151;
+    padding: 4px 0;
+}
 
-.section-header-row td { background: #fafafa; font-weight: 700; text-transform: uppercase; font-size: 10px; color: #666; }
-.bill-total-row td { font-weight: 700; text-align: right; border-top: 2px solid #333; }
-.grand-total-row td { font-size: 13px; background: #fdfdfd; }
+/* Totals Box */
+.pb-totals-box {
+    width: 260px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 6px;
+    overflow: hidden;
+}
 
-.bill-footer { margin-top: auto; padding-top: 10mm; }
-.footer-top-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; align-items: end; }
-.footer-note { font-size: 10px; color: #666; line-height: 1.4; }
-.footer-auth, .footer-prepared { border-top: 1px solid #333; text-align: center; padding-top: 5px; font-size: 11px; font-weight: 700; }
-.prepared-by-label { font-size: 9px; color: #666; margin: 0; }
+.pb-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 16px;
+    font-size: 12.5px;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+}
 
+.pb-total-row:last-child { border-bottom: none; }
+
+/* Gross Total — prominently highlighted */
+.pb-gross-row {
+    background: #1e293b;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 12px 16px;
+    letter-spacing: 0.3px;
+}
+
+.pb-deduct-row {
+    color: #6b7280;
+    font-size: 12px;
+    background: #f9fafb;
+}
+
+.pb-total-divider {
+    height: 2px;
+    background: #d1d5db;
+}
+
+.pb-balance-row {
+    font-size: 14px;
+    font-weight: 700;
+    padding: 11px 16px;
+}
+
+.pb-balance-due  { background: #fef2f2; color: #dc2626; }
+.pb-balance-clear { background: #f0fdf4; color: #16a34a; }
+
+.pb-balance-row strong { font-size: 15px; }
+
+/* ── FOOTER ── */
+.pb-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.pb-footer-note {
+    font-size: 10px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 28px;
+    font-style: italic;
+}
+
+.pb-sig-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.pb-sig-block {
+    flex: 1;
+    text-align: center;
+}
+
+.pb-sig-line {
+    border-top: 1.5px solid #374151;
+    margin-bottom: 6px;
+}
+
+.pb-sig-label {
+    font-size: 10.5px;
+    color: #374151;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ── PRINT MEDIA ── */
 @media print {
-    /* Hide everything except the bill */
-    body * {
-        visibility: hidden;
-    }
-    .bill-preview-overlay, .bill-preview-overlay * {
-        visibility: visible;
-    }
+    body * { visibility: hidden; }
+
+    .bill-preview-overlay,
+    .bill-preview-overlay * { visibility: visible; }
+
     .bill-preview-overlay {
         position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
+        inset: 0;
         padding: 0;
-        margin: 0;
         background: white;
-        height: auto;
-        min-height: auto;
     }
-    .bill-preview-actions, .no-print {
-        display: none !important;
-    }
+
+    .bill-preview-actions,
+    .no-print { display: none !important; }
+
     .printable-bill {
-        box-shadow: none;
-        margin: 0;
         width: 100%;
-        padding: 8mm 10mm;
         min-height: auto;
-        height: auto;
+        padding: 10mm 12mm;
+        box-shadow: none;
     }
-    .bill-header {
-        margin-bottom: 5mm;
-        padding-bottom: 3mm;
-    }
-    .bill-logo-section {
-        gap: 10px;
-    }
-    .bill-symbol-wrapper img { width: 50px; height: 50px; }
-    .bill-title-anj { font-size: 28px; }
-    .bill-hospital-info p { font-size: 10px; margin: 1px 0; }
-    
-    .bill-discharge-title { margin-bottom: 3mm; }
-    .bill-discharge-title h3 { font-size: 16px; }
 
-    .info-table td { padding: 2mm; font-size: 10px; }
-    .info-content { margin-top: 1mm; }
-    .bill-items-table th, .bill-items-table td { padding: 1.5mm; font-size: 10px; }
-    .section-header-row td { padding: 1mm 2mm; font-size: 9px; }
-    
-    .bill-total-row td { padding: 1.5mm; font-size: 10px; }
-    .grand-total-row td { font-size: 12px; }
-
-    .bill-footer { margin-top: 5mm; padding-top: 5mm; }
-    .footer-note { font-size: 9px; }
-    .footer-auth, .footer-prepared { font-size: 10px; }
+    .pb-hospital-name { font-size: 22px; }
+    .pb-logo-img { width: 44px; height: 44px; }
+    .pb-contact-line,
+    .pb-cell-sub,
+    .pb-kv,
+    .pb-data-row td,
+    .pb-subtotal-row td,
+    .pb-total-row { font-size: 10px; }
+    .pb-section-row td { font-size: 9.5px; }
+    .pb-balance-row strong { font-size: 12px; }
+    .pb-sig-label { font-size: 9px; }
 
     @page {
         size: A4;
