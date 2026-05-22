@@ -6,6 +6,7 @@ import Sidebar from "../layouts/Sidebar";
 import PatientRegister from "../pages/PatientRegister";
 import DoctorRegister from "../pages/DoctorRegister";
 import Invoice from "../pages/Invoice";
+import Treatments from "../pages/Treatments";
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -19,6 +20,7 @@ const AppRoutes = () => {
           <Route path="/patient-register" element={<PatientRegister />} />
           <Route path="/doctor-register" element={<DoctorRegister />} />
           <Route path="/invoice" element={<Invoice />} />
+          <Route path="/treatments" element={<Treatments />} />
         </Route>
       </Route>
     </Routes>
