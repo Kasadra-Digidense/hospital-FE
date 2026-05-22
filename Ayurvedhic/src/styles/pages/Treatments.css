@@ -329,21 +329,21 @@
 }
 
 .treatments-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   background: var(--primary-green);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 50px;
   flex-shrink: 0;
   transition: transform 0.3s ease;
 }
 
-.treatments-item:hover .treatments-avatar {
+/* .treatments-item:hover .treatments-avatar {
   transform: rotate(-10deg) scale(1.05);
-}
+} */
 
 .treatments-avatar svg {
   width: 20px;

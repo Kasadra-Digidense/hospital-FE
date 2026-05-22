@@ -319,8 +319,8 @@ const Treatments = () => {
                       className={`treatments-item${isEditing ? " treatments-item--editing" : ""}`}
                     >
                       <div className="treatments-avatar">
-                        <LeafIcon />
-                      </div>
+  {treatment.item_name?.charAt(0).toUpperCase()}
+</div>
                       <div className="treatments-info">
                         {isEditing ? (
                           <div className="treatments-edit-inputs">
