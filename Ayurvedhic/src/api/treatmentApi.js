@@ -30,7 +30,7 @@ export const createTreatmentApi = async (treatmentData) => {
 
 export const updateTreatmentApi = async (treatmentId, treatmentData) => {
   try {
-    const response = await axiosInstance.patch(
+    const response = await axiosInstance.put(
       `/treatments/${treatmentId}`,
       treatmentData
     );
