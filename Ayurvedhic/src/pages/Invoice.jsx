@@ -6,10 +6,10 @@ import {
   createInvoice,
   fetchInvoicePatients,
   fetchInvoiceRooms,
-  fetchTreatments,
   resetInvoiceCreation,
 } from "../features/invoiceSlice";
 import { fetchDoctors } from "../features/doctorSlice";
+import { fetchTreatments as fetchTreatmentCatalog } from "../features/treatmentSlice";
 
 // Constants for Dropdowns
 const DEFAULT_TREATMENT_OPTIONS = [
@@ -66,37 +66,34 @@ const buildPatientAddress = (address = {}, fallbackPlace = "") => {
   return fallbackPlace || "Address not available";
 };
 
-const normalizeTreatment = (treatment) => ({
-  id:
-    treatment.id ??
-    treatment._id ??
-    treatment.treatmentId ??
-    treatment.item_id ??
-    treatment.item_name ??
-    treatment.name ??
-    treatment.treatmentName ??
-    treatment.treatment_name,
-  name:
-    treatment.item_name ??
-    treatment.itemName ??
-    treatment.name ??
-    treatment.treatmentName ??
-    treatment.treatment_name ??
-    treatment.title ??
-    "",
-  rate: Number(
-    treatment.item_rate ??
-      treatment.itemRate ??
-      treatment.item_price ??
-      treatment.itemPrice ??
-    treatment.rate ??
-      treatment.amount ??
-      treatment.price ??
-      treatment.fee ??
-      treatment.charge ??
-      0,
-  ),
-});
+const normalizeTreatment = (treatment) => {
+  const hasChargeTypeMetadata =
+    treatment?.type != null ||
+    treatment?.charge_type != null ||
+    treatment?.chargeType != null ||
+    treatment?.type_name != null ||
+    treatment?.typeName != null;
+
+  const id = treatment?.id ?? treatment?.item_id ?? treatment?._id;
+  const name = treatment?.item_name ?? treatment?.itemName ?? "";
+
+  if (hasChargeTypeMetadata || id == null || !String(name).trim()) {
+    return null;
+  }
+
+  return {
+    id,
+    name: String(name).trim(),
+    rate: Number(
+      treatment?.price ??
+        treatment?.item_price ??
+        treatment?.itemPrice ??
+        treatment?.item_rate ??
+        treatment?.itemRate ??
+        0,
+    ),
+  };
+};
 
 const normalizePatient = (patient) => ({
   id: patient.id,
@@ -171,17 +168,19 @@ const Invoice = () => {
     roomFetchStatus,
     error,
     roomError,
-    treatments,
     patientsStatus,
-    treatmentsStatus,
     patientsError,
-    treatmentsError,
     createStatus,
     createError,
     createdInvoice,
   } = useSelector((state) => state.invoice);
   const { doctors, fetchLoading: doctorsLoading, fetchError: doctorsError } =
     useSelector((state) => state.doctor);
+  const {
+    treatments,
+    fetchLoading: treatmentsFetchLoading,
+    fetchError: treatmentsError,
+  } = useSelector((state) => state.treatments);
   const [activeStep, setActiveStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
 
@@ -230,10 +229,10 @@ const Invoice = () => {
 
 
   useEffect(() => {
-    if (treatmentsStatus !== "loading" && treatmentsStatus === "idle") {
-      dispatch(fetchTreatments());
+    if (!treatmentsFetchLoading && treatments.length === 0) {
+      dispatch(fetchTreatmentCatalog());
     }
-  }, [dispatch]);
+  }, [dispatch, treatmentsFetchLoading, treatments.length]);
 
   // CALCULATIONS
   const totals = useMemo(() => {
@@ -404,7 +403,10 @@ const Invoice = () => {
 
     const normalizedTreatments = treatmentList
       .map(normalizeTreatment)
-      .filter((treatment) => treatment.name);
+      .filter(Boolean)
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, "en", { sensitivity: "base" }),
+      );
 
     return normalizedTreatments.length > 0
       ? normalizedTreatments
@@ -1081,12 +1083,12 @@ const Invoice = () => {
                                         {opt.name}
                                       </div>
                                     ))}
-                                    {treatmentsStatus === "loading" && (
+                                    {treatmentsFetchLoading && (
                                       <div className="table-dropdown-item">
                                         Loading treatments...
                                       </div>
                                     )}
-                                    {treatmentsStatus === "failed" &&
+                                    {!treatmentsFetchLoading &&
                                       treatmentsError && (
                                         <div className="table-dropdown-item">
                                           {treatmentsError}
