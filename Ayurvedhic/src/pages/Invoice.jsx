@@ -20,7 +20,6 @@ const DEFAULT_TREATMENT_OPTIONS = [
   { name: "PIZHICHIL", rate: 1200 },
   { name: "SIRODHARA", rate: 800 },
   { name: "UDVARTHANAM", rate: 600 },
-  
 ];
 
 const ADDITIONAL_CHARGE_TYPES = [
@@ -44,7 +43,7 @@ const createInitialTreatmentCharges = () => [
   { treatment: "", qty: 0, rate: 0, amount: 0, showList: false },
 ];
 const createInitialAdditionalCharges = () => [
-  { type: "Doctor Fee", amount: 0 },
+  { type: "Doctor Fee", qty: 1, rate: 0, amount: 0 },
 ];
 const createInitialPayments = () => [{ method: "Cash", amount: 0 }];
 
@@ -174,8 +173,11 @@ const Invoice = () => {
     createError,
     createdInvoice,
   } = useSelector((state) => state.invoice);
-  const { doctors, fetchLoading: doctorsLoading, fetchError: doctorsError } =
-    useSelector((state) => state.doctor);
+  const {
+    doctors,
+    fetchLoading: doctorsLoading,
+    fetchError: doctorsError,
+  } = useSelector((state) => state.doctor);
   const {
     treatments,
     fetchLoading: treatmentsFetchLoading,
@@ -226,7 +228,6 @@ const Invoice = () => {
     }
     dispatch(fetchDoctors());
   }, [dispatch]);
-
 
   useEffect(() => {
     if (!treatmentsFetchLoading && treatments.length === 0) {
@@ -342,8 +343,8 @@ const Invoice = () => {
 
     if (field === "days" || field === "rate") {
       newRows[index].amount =
-        Math.max(0, (parseFloat(newRows[index].days) || 0)) *
-        Math.max(0, (parseFloat(newRows[index].rate) || 0));
+        Math.max(0, parseFloat(newRows[index].days) || 0) *
+        Math.max(0, parseFloat(newRows[index].rate) || 0);
     }
     setRoomCharges(newRows);
   };
@@ -374,10 +375,28 @@ const Invoice = () => {
     }
     if (field === "qty" || field === "rate") {
       newRows[index].amount =
-        Math.max(0, (parseFloat(newRows[index].qty) || 0)) *
-        Math.max(0, (parseFloat(newRows[index].rate) || 0));
+        Math.max(0, parseFloat(newRows[index].qty) || 0) *
+        Math.max(0, parseFloat(newRows[index].rate) || 0);
     }
     setTreatmentCharges(newRows);
+  };
+
+  const handleAdditionalChargeChange = (index, field, value) => {
+    const newRows = [...additionalCharges];
+
+    if (field === "qty" || field === "rate") {
+      value = clampNonNegative(value);
+    }
+
+    newRows[index][field] = value;
+
+    if (field === "qty" || field === "rate") {
+      newRows[index].amount =
+        Math.max(0, parseFloat(newRows[index].qty) || 0) *
+        Math.max(0, parseFloat(newRows[index].rate) || 0);
+    }
+
+    setAdditionalCharges(newRows);
   };
 
   const invoicePatients = useMemo(
@@ -498,7 +517,9 @@ const Invoice = () => {
         .filter((row) => row.type)
         .map((row) => ({
           type: row.type,
-          amount: toNumber(row.amount),
+          quantity: toNumber(row.qty),
+          unit_price: toNumber(row.rate),
+          total: toNumber(row.amount),
         })),
       payments: payments
         .filter((row) => row.method)
@@ -570,7 +591,7 @@ const Invoice = () => {
             <aside className="invoice-steps-sidebar">
               {[
                 { n: 1, label: "Select Patient", desc: "Search & Verify" },
-                { n: 2, label: "Stay Details", desc: "Stay & Rooms" }, 
+                { n: 2, label: "Stay Details", desc: "Stay & Rooms" },
                 { n: 3, label: "Treatments", desc: "Procedures & Extras" },
                 { n: 4, label: "Payments", desc: "Cash/UPI/Balance" },
                 { n: 5, label: "Review", desc: "Final Check" },
@@ -608,7 +629,9 @@ const Invoice = () => {
                       <input
                         type="text"
                         aria-invalid={Boolean(validationErrors.patient)}
-                        className={validationErrors.patient ? "pr-input--error" : ""}
+                        className={
+                          validationErrors.patient ? "pr-input--error" : ""
+                        }
                         placeholder="Search by Name, MRD or Phone Number..."
                         value={patientSearch}
                         onFocus={() => setShowPatientList(true)}
@@ -641,7 +664,8 @@ const Invoice = () => {
                             >
                               <span>{p.name}</span>
                               <small>
-                                MRD: {p.mrd} | IP: {p.ipNumber || "-"} | Phone: {p.phone || "-"}
+                                MRD: {p.mrd} | IP: {p.ipNumber || "-"} | Phone:{" "}
+                                {p.phone || "-"}
                               </small>
                             </div>
                           ))}
@@ -717,7 +741,9 @@ const Invoice = () => {
                         type="date"
                         aria-invalid={Boolean(validationErrors.admissionDate)}
                         className={
-                          validationErrors.admissionDate ? "pr-input--error" : ""
+                          validationErrors.admissionDate
+                            ? "pr-input--error"
+                            : ""
                         }
                         value={admissionData.admissionDate}
                         onChange={(e) =>
@@ -745,7 +771,9 @@ const Invoice = () => {
                         type="date"
                         aria-invalid={Boolean(validationErrors.dischargeDate)}
                         className={
-                          validationErrors.dischargeDate ? "pr-input--error" : ""
+                          validationErrors.dischargeDate
+                            ? "pr-input--error"
+                            : ""
                         }
                         value={admissionData.dischargeDate}
                         onChange={(e) =>
@@ -792,10 +820,14 @@ const Invoice = () => {
                             </option>
                           ))}
                         </select>
-                        <span className="dropdown-chevron" aria-hidden="true">▼</span>
+                        <span className="dropdown-chevron" aria-hidden="true">
+                          ▼
+                        </span>
                       </div>
                       {doctorsLoading && (
-                        <span className="pr-field-hint">Loading doctors...</span>
+                        <span className="pr-field-hint">
+                          Loading doctors...
+                        </span>
                       )}
                       {!doctorsLoading && doctorsError && (
                         <span className="pr-field-error">{doctorsError}</span>
@@ -932,7 +964,7 @@ const Invoice = () => {
                                 type="number"
                                 min="0"
                                 value={row.days}
-                                onFocus={(e) => {
+                                onFocus={() => {
                                   if (Number(row.days) === 0) {
                                     handleRoomRowChange(index, "days", "");
                                   }
@@ -951,7 +983,7 @@ const Invoice = () => {
                                 type="number"
                                 min="0"
                                 value={row.rate}
-                                onFocus={(e) => {
+                                onFocus={() => {
                                   if (Number(row.rate) === 0) {
                                     handleRoomRowChange(index, "rate", "");
                                   }
@@ -1103,7 +1135,7 @@ const Invoice = () => {
                                 type="number"
                                 min="0"
                                 value={row.qty}
-                                onFocus={(e) => {
+                                onFocus={() => {
                                   if (Number(row.qty) === 0) {
                                     handleTreatmentRowChange(index, "qty", "");
                                   }
@@ -1122,7 +1154,7 @@ const Invoice = () => {
                                 type="number"
                                 min="0"
                                 value={row.rate}
-                                onFocus={(e) => {
+                                onFocus={() => {
                                   if (Number(row.rate) === 0) {
                                     handleTreatmentRowChange(index, "rate", "");
                                   }
@@ -1174,7 +1206,7 @@ const Invoice = () => {
                       onClick={() =>
                         setAdditionalCharges([
                           ...additionalCharges,
-                          { type: "Miscellaneous", amount: 0 },
+                          { type: "Miscellaneous", qty: 1, rate: 0, amount: 0 },
                         ])
                       }
                     >
@@ -1182,11 +1214,13 @@ const Invoice = () => {
                     </button>
                   </div>
                   <div className="dynamic-table-container">
-                    <table className="wizard-table">
+                    <table className="wizard-table wizard-table--additional">
                       <thead>
                         <tr>
                           <th>Charge Type</th>
-                          <th>Amount (₹)</th>
+                          <th>Qty</th>
+                          <th>Rate</th>
+                          <th>Amount</th>
                           <th></th>
                         </tr>
                       </thead>
@@ -1196,11 +1230,13 @@ const Invoice = () => {
                             <td>
                               <select
                                 value={row.type}
-                                onChange={(e) => {
-                                  const newRows = [...additionalCharges];
-                                  newRows[index].type = e.target.value;
-                                  setAdditionalCharges(newRows);
-                                }}
+                                onChange={(e) =>
+                                  handleAdditionalChargeChange(
+                                    index,
+                                    "type",
+                                    e.target.value,
+                                  )
+                                }
                               >
                                 {ADDITIONAL_CHARGE_TYPES.map((t) => (
                                   <option key={t} value={t}>
@@ -1213,22 +1249,48 @@ const Invoice = () => {
                               <input
                                 type="number"
                                 min="0"
-                                value={row.amount}
-                                onFocus={(e) => {
-                                  if (Number(row.amount) === 0) {
+                                value={row.qty}
+                                onFocus={() => {
+                                  if (Number(row.qty) === 0) {
+                                    handleAdditionalChargeChange(
+                                      index,
+                                      "qty",
+                                      "",
+                                    );
+                                  }
+                                }}
+                                onChange={(e) =>
+                                  handleAdditionalChargeChange(
+                                    index,
+                                    "qty",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                min="0"
+                                value={row.rate}
+                                onFocus={() => {
+                                  if (Number(row.rate) === 0) {
                                     const newRows = [...additionalCharges];
-                                    newRows[index].amount = "";
+                                    newRows[index].rate = "";
                                     setAdditionalCharges(newRows);
                                   }
                                 }}
-                                onChange={(e) => {
-                                  const newRows = [...additionalCharges];
-                                  newRows[index].amount = clampNonNegative(
+                                onChange={(e) =>
+                                  handleAdditionalChargeChange(
+                                    index,
+                                    "rate",
                                     e.target.value,
-                                  );
-                                  setAdditionalCharges(newRows);
-                                }}
+                                  )
+                                }
                               />
+                            </td>
+                            <td>
+                              <input type="text" value={row.amount} readOnly />
                             </td>
                             <td>
                               <button
@@ -1246,6 +1308,10 @@ const Invoice = () => {
                             </td>
                           </tr>
                         ))}
+                        <tr className="table-total-row">
+                          <td colSpan="3">Additional Fees Total</td>
+                          <td colSpan="2">₹{totals.extraTotal.toFixed(2)}</td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -1304,7 +1370,7 @@ const Invoice = () => {
                                   type="number"
                                   min="0"
                                   value={row.amount}
-                                  onFocus={(e) => {
+                                  onFocus={() => {
                                     if (Number(row.amount) === 0) {
                                       const newRows = [...payments];
                                       newRows[index].amount = "";
@@ -1486,10 +1552,7 @@ const Invoice = () => {
                   )}
 
                   {activeStep < 5 ? (
-                    <button
-                      className="nav-btn primary"
-                      onClick={nextStep}
-                    >
+                    <button className="nav-btn primary" onClick={nextStep}>
                       Next
                       <svg
                         viewBox="0 0 24 24"
@@ -1539,10 +1602,17 @@ const Invoice = () => {
           <div className="bill-preview-actions no-print">
             <div className="bill-action-left">
               <span className="bill-ready-badge">✓ Invoice Ready</span>
-              <span className="bill-no-tag">Bill No: {generatedBillNumber}</span>
+              <span className="bill-no-tag">
+                Bill No: {generatedBillNumber}
+              </span>
             </div>
             <button className="nav-btn success" onClick={handlePrintInvoice}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
               </svg>
               Print Invoice
@@ -1551,10 +1621,13 @@ const Invoice = () => {
 
           {/* Printable A4 Bill */}
           <div className="printable-bill">
-
             {/* ── HEADER ── */}
             <div className="pb-header">
-              <img src={ayurLogo} alt="Anjaneyam Logo" className="pb-logo-img" />
+              <img
+                src={ayurLogo}
+                alt="Anjaneyam Logo"
+                className="pb-logo-img"
+              />
               <div className="pb-contact-block">
                 <div className="pb-contact-line">Machiyil, Padiyottuchal</div>
                 <div className="pb-contact-line">
@@ -1576,22 +1649,44 @@ const Invoice = () => {
               <div className="pb-info-cell">
                 <div className="pb-cell-label">Name and Address</div>
                 <div className="pb-cell-content">
-                  <div className="pb-cell-row">Name : {selectedPatient?.name || "-"}</div>
-                  <div className="pb-cell-row">{selectedPatient?.address || "-"}</div>
-                  <div className="pb-cell-row">Age : {selectedPatient?.age || "-"}</div>
-                  <div className="pb-cell-row">Gender : {selectedPatient?.gender || "-"}</div>
+                  <div className="pb-cell-row">
+                    Name : {selectedPatient?.name || "-"}
+                  </div>
+                  <div className="pb-cell-row">
+                    {selectedPatient?.address || "-"}
+                  </div>
+                  <div className="pb-cell-row">
+                    Age : {selectedPatient?.age || "-"}
+                  </div>
+                  <div className="pb-cell-row">
+                    Gender : {selectedPatient?.gender || "-"}
+                  </div>
                 </div>
               </div>
               <div className="pb-info-cell">
-                <div className="pb-kv-alt"><strong>MRD No: {selectedPatient?.mrd || "-"}</strong></div>
-                <div className="pb-kv-alt"><strong>IP No: {selectedPatient?.ipNumber || "-"}</strong></div>
-                <div className="pb-kv-alt">Admission :{formatBillDate(admissionData.admissionDate)}</div>
-                <div className="pb-kv-alt">Discharge :{formatBillDate(admissionData.dischargeDate)}</div>
+                <div className="pb-kv-alt">
+                  <strong>MRD No: {selectedPatient?.mrd || "-"}</strong>
+                </div>
+                <div className="pb-kv-alt">
+                  <strong>IP No: {selectedPatient?.ipNumber || "-"}</strong>
+                </div>
+                <div className="pb-kv-alt">
+                  Admission :{formatBillDate(admissionData.admissionDate)}
+                </div>
+                <div className="pb-kv-alt">
+                  Discharge :{formatBillDate(admissionData.dischargeDate)}
+                </div>
               </div>
               <div className="pb-info-cell">
-                <div className="pb-kv-alt"><strong>Bill No :{generatedBillNumber}</strong></div>
-                <div className="pb-kv-alt">Consultant : {admissionData.consultant || "-"}</div>
-                <div className="pb-kv-alt">Date : {formatBillDate(new Date())}</div>
+                <div className="pb-kv-alt">
+                  <strong>Bill No :{generatedBillNumber}</strong>
+                </div>
+                <div className="pb-kv-alt">
+                  Consultant : {admissionData.consultant || "-"}
+                </div>
+                <div className="pb-kv-alt">
+                  Date : {formatBillDate(new Date())}
+                </div>
                 <div className="pb-kv-alt">Days : {calculatedDays || 0}</div>
               </div>
             </div>
@@ -1603,7 +1698,11 @@ const Invoice = () => {
                   <th className="pb-th-desc">Description</th>
                   <th className="pb-th-num">Qty</th>
                   <th className="pb-th-num">Rate (INR)</th>
-                  <th className="pb-th-num">Amount (Rs.)<br/>(INR)</th>
+                  <th className="pb-th-num">
+                    Amount (Rs.)
+                    <br />
+                    (INR)
+                  </th>
                   <th className="pb-th-num">Total (INR)</th>
                 </tr>
               </thead>
@@ -1614,9 +1713,15 @@ const Invoice = () => {
                     <td className="pb-td-desc">Room Rent [{item.room}]</td>
                     <td className="pb-td-num">{item.days}</td>
                     <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
-                    <td className="pb-td-num">{formatBillAmount(item.amount)}</td>
+                    <td className="pb-td-num">
+                      {formatBillAmount(item.amount)}
+                    </td>
                     <td className="pb-td-total">
-                      {i === printableRoomCharges.length - 1 ? <strong>{formatBillAmount(totals.roomTotal)}</strong> : ""}
+                      {i === printableRoomCharges.length - 1 ? (
+                        <strong>{formatBillAmount(totals.roomTotal)}</strong>
+                      ) : (
+                        ""
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -1635,36 +1740,54 @@ const Invoice = () => {
                 {/* Treatments List */}
                 {printableTreatmentCharges.map((item, i) => (
                   <tr key={`t-${i}`} className="pb-data-row">
-                    <td className="pb-td-desc">  {item.treatment.toUpperCase()}</td>
-                    <td className="pb-td-num">
-                      {item.qty} Nos
+                    <td className="pb-td-desc">
+                      &nbsp;&nbsp;{item.treatment.toUpperCase()}
                     </td>
+                    <td className="pb-td-num">{item.qty} Nos</td>
                     <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
-                    <td className="pb-td-num">{formatBillAmount(item.amount)}</td>
+                    <td className="pb-td-num">
+                      {formatBillAmount(item.amount)}
+                    </td>
                     <td className="pb-td-total">
-                      {i === printableTreatmentCharges.length - 1 ? <strong>{formatBillAmount(totals.treatmentTotal)}</strong> : ""}
+                      {i === printableTreatmentCharges.length - 1 ? (
+                        <strong>
+                          {formatBillAmount(totals.treatmentTotal)}
+                        </strong>
+                      ) : (
+                        ""
+                      )}
                     </td>
                   </tr>
                 ))}
-                
-                {/* Additional Fees listed individually in the Total column */}
+
+                {/* Additional Fees */}
                 {printableAdditionalCharges.map((item, i) => (
                   <tr key={`e-${i}`} className="pb-data-row pb-extra-row">
                     <td className="pb-td-desc">{item.type.toUpperCase()}</td>
-                    <td className="pb-td-num"></td>
-                    <td className="pb-td-num"></td>
-                    <td className="pb-td-num"></td>
-                    <td className="pb-td-total"><strong>{formatBillAmount(item.amount)}</strong></td>
+                    <td className="pb-td-num">{toNumber(item.qty)}</td>
+                    <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
+                    <td className="pb-td-num">
+                      {formatBillAmount(item.amount)}
+                    </td>
+                    <td className="pb-td-total">
+                      {i === printableAdditionalCharges.length - 1 ? (
+                        <strong>{formatBillAmount(totals.extraTotal)}</strong>
+                      ) : (
+                        ""
+                      )}
+                    </td>
                   </tr>
                 ))}
-                
+
                 {/* Extras Round Off */}
                 <tr className="pb-data-row pb-extra-row">
                   <td className="pb-td-desc">EXTRAS ROUND OFF</td>
                   <td className="pb-td-num"></td>
                   <td className="pb-td-num"></td>
                   <td className="pb-td-num"></td>
-                  <td className="pb-td-total"><strong>0.00</strong></td>
+                  <td className="pb-td-total">
+                    <strong>0.00</strong>
+                  </td>
                 </tr>
 
                 {/* Grand Totals */}
@@ -1673,22 +1796,32 @@ const Invoice = () => {
                   <td></td>
                   <td></td>
                   <td></td>
-                  <td className="pb-grand-value"><strong>{formatBillAmount(totals.gross)}</strong></td>
+                  <td className="pb-grand-value">
+                    <strong>{formatBillAmount(totals.gross)}</strong>
+                  </td>
                 </tr>
                 <tr className="pb-grand-row">
                   <td className="pb-grand-label">Total Advance</td>
                   <td></td>
                   <td></td>
-                  <td className="pb-td-num"><strong>{formatBillAmount(totals.currentPaid)}</strong></td>
-                  <td className="pb-grand-value"><strong>{formatBillAmount(totals.currentPaid)}</strong></td>
+                  <td className="pb-td-num">
+                    <strong>{formatBillAmount(totals.currentPaid)}</strong>
+                  </td>
+                  <td className="pb-grand-value">
+                    <strong>{formatBillAmount(totals.currentPaid)}</strong>
+                  </td>
                 </tr>
                 {printablePayments.map((item, i) => (
                   <tr key={`p-${i}`} className="pb-grand-row pb-payment-row">
-                    <td className="pb-grand-label">Amount Paid ({item.method.toUpperCase()})</td>
+                    <td className="pb-grand-label">
+                      Amount Paid ({item.method.toUpperCase()})
+                    </td>
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td className="pb-grand-value"><strong>{formatBillAmount(item.amount)}</strong></td>
+                    <td className="pb-grand-value">
+                      <strong>{formatBillAmount(item.amount)}</strong>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -1699,12 +1832,14 @@ const Invoice = () => {
               {/* Payment Breakdown */}
               <div className="pb-payment-breakdown">
                 <div className="pb-breakdown-title">Payment Details</div>
-                {payments.filter(p => parseFloat(p.amount) > 0).map((p, i) => (
-                  <div key={i} className="pb-breakdown-row">
-                    <span>{p.method}</span>
-                    <span>₹ {parseFloat(p.amount).toFixed(2)}</span>
-                  </div>
-                ))}
+                {payments
+                  .filter((p) => parseFloat(p.amount) > 0)
+                  .map((p, i) => (
+                    <div key={i} className="pb-breakdown-row">
+                      <span>{p.method}</span>
+                      <span>₹ {parseFloat(p.amount).toFixed(2)}</span>
+                    </div>
+                  ))}
               </div>
 
               {/* Totals Box */}
@@ -1718,7 +1853,9 @@ const Invoice = () => {
                   <span>₹ {totals.currentPaid.toFixed(2)}</span>
                 </div>
                 <div className="pb-total-divider" />
-                <div className={`pb-total-row pb-balance-row ${totals.balance > 0 ? "pb-balance-due" : "pb-balance-clear"}`}>
+                <div
+                  className={`pb-total-row pb-balance-row ${totals.balance > 0 ? "pb-balance-due" : "pb-balance-clear"}`}
+                >
                   <span>Balance Due</span>
                   <strong>₹ {totals.balance.toFixed(2)}</strong>
                 </div>
@@ -1729,8 +1866,7 @@ const Invoice = () => {
             <div className="pb-footer-box">
               <div className="pb-footer-note">
                 I Agree that I am responsible for the full payment of the bill
-                in the event it is not paid by the company or person
-                indicated.
+                in the event it is not paid by the company or person indicated.
               </div>
               <div className="pb-footer-sign">
                 <div className="pb-footer-sign-label">Auth. Signatory</div>
@@ -1739,7 +1875,6 @@ const Invoice = () => {
                 <div className="pb-footer-prepared-label">PREPARED BY</div>
               </div>
             </div>
-
           </div>
         </div>
       )}
