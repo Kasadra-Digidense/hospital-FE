@@ -317,6 +317,8 @@ const Invoice = () => {
     setActiveStep(targetStep);
   };
 
+  // changes made
+
   const nextStep = () => goToStep(Math.min(activeStep + 1, 6));
   const prevStep = () => goToStep(Math.max(activeStep - 1, 1));
 
