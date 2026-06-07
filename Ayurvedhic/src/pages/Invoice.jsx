@@ -509,6 +509,7 @@ const Invoice = () => {
       patient_id: selectedPatient.id,
       admission_date: admissionData.admissionDate,
       discharge_date: admissionData.dischargeDate,
+      bill_date: admissionData.dischargeDate,
       consultant: admissionData.consultant,
       room_total: totals.roomTotal,
       treatment_total: totals.treatmentTotal,
@@ -1690,7 +1691,7 @@ const Invoice = () => {
                   Consultant : {admissionData.consultant || "-"}
                 </div>
                 <div className="pb-kv-alt">
-                  Date : {formatBillDate(new Date())}
+                  Date : {formatBillDate(admissionData.dischargeDate || new Date())}
                 </div>
                 <div className="pb-kv-alt">Days : {calculatedDays || 0}</div>
               </div>
