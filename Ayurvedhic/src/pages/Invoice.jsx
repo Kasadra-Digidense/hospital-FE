@@ -216,7 +216,7 @@ const Invoice = () => {
     const start = new Date(admissionData.admissionDate);
     const end = new Date(admissionData.dischargeDate);
     const diffTime = Math.abs(end - start);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 0;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   }, [admissionData.admissionDate, admissionData.dischargeDate]);
 
   useEffect(() => {
