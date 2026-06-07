@@ -431,6 +431,12 @@
     min-width: 280px;
 }
 
+.wizard-table--additional th:first-child,
+.wizard-table--additional td:first-child {
+    width: 36%;
+    min-width: 220px;
+}
+
 .wizard-table input, .wizard-table select {
     width: 100%;
     padding: 8px 12px;
