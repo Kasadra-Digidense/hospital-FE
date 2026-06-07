@@ -85,15 +85,15 @@ const normalizeTreatment = (treatment) => ({
     "",
   rate: Number(
     treatment.item_rate ??
-      treatment.itemRate ??
-      treatment.item_price ??
-      treatment.itemPrice ??
+    treatment.itemRate ??
+    treatment.item_price ??
+    treatment.itemPrice ??
     treatment.rate ??
-      treatment.amount ??
-      treatment.price ??
-      treatment.fee ??
-      treatment.charge ??
-      0,
+    treatment.amount ??
+    treatment.price ??
+    treatment.fee ??
+    treatment.charge ??
+    0,
   ),
 });
 
@@ -1703,7 +1703,7 @@ const Invoice = () => {
                   <th className="pb-th-desc">Description</th>
                   <th className="pb-th-num">Qty</th>
                   <th className="pb-th-num">Rate (INR)</th>
-                  <th className="pb-th-num">Amount (Rs.)<br/>(INR)</th>
+                  <th className="pb-th-num">Amount (Rs.)<br />(INR)</th>
                   <th className="pb-th-num">Total (INR)</th>
                 </tr>
               </thead>
@@ -1760,7 +1760,7 @@ const Invoice = () => {
                     </td>
                   </tr>
                 ))}
-                
+
                 {/* Additional Fees listed individually in the Total column */}
                 {printableAdditionalCharges.map((item, i) => (
                   <tr key={`e-${i}`} className="pb-data-row pb-extra-row">
