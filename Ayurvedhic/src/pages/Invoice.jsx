@@ -20,7 +20,7 @@ const DEFAULT_TREATMENT_OPTIONS = [
   { name: "PIZHICHIL", rate: 1200 },
   { name: "SIRODHARA", rate: 800 },
   { name: "UDVARTHANAM", rate: 600 },
-  
+
 ];
 
 const ADDITIONAL_CHARGE_TYPES = [
@@ -86,15 +86,15 @@ const normalizeTreatment = (treatment) => ({
     "",
   rate: Number(
     treatment.item_rate ??
-      treatment.itemRate ??
-      treatment.item_price ??
-      treatment.itemPrice ??
+    treatment.itemRate ??
+    treatment.item_price ??
+    treatment.itemPrice ??
     treatment.rate ??
-      treatment.amount ??
-      treatment.price ??
-      treatment.fee ??
-      treatment.charge ??
-      0,
+    treatment.amount ??
+    treatment.price ??
+    treatment.fee ??
+    treatment.charge ??
+    0,
   ),
 });
 
@@ -570,7 +570,7 @@ const Invoice = () => {
             <aside className="invoice-steps-sidebar">
               {[
                 { n: 1, label: "Select Patient", desc: "Search & Verify" },
-                { n: 2, label: "Stay Details", desc: "Stay & Rooms" }, 
+                { n: 2, label: "Stay Details", desc: "Stay & Rooms" },
                 { n: 3, label: "Treatments", desc: "Procedures & Extras" },
                 { n: 4, label: "Payments", desc: "Cash/UPI/Balance" },
                 { n: 5, label: "Review", desc: "Final Check" },
@@ -887,10 +887,10 @@ const Invoice = () => {
                                     )}
                                     {(row.room
                                       ? roomOptions.filter((opt) =>
-                                          `${opt.name} ${opt.group}`
-                                            .toLowerCase()
-                                            .includes(row.room.toLowerCase()),
-                                        )
+                                        `${opt.name} ${opt.group}`
+                                          .toLowerCase()
+                                          .includes(row.room.toLowerCase()),
+                                      )
                                       : roomOptions
                                     ).map((opt) => (
                                       <div
@@ -1058,12 +1058,12 @@ const Invoice = () => {
                                   <div className="table-dropdown">
                                     {(row.treatment
                                       ? treatmentOptions.filter((opt) =>
-                                          opt.name
-                                            .toLowerCase()
-                                            .includes(
-                                              row.treatment.toLowerCase(),
-                                            ),
-                                        )
+                                        opt.name
+                                          .toLowerCase()
+                                          .includes(
+                                            row.treatment.toLowerCase(),
+                                          ),
+                                      )
                                       : treatmentOptions
                                     ).map((opt) => (
                                       <div
@@ -1603,7 +1603,7 @@ const Invoice = () => {
                   <th className="pb-th-desc">Description</th>
                   <th className="pb-th-num">Qty</th>
                   <th className="pb-th-num">Rate (INR)</th>
-                  <th className="pb-th-num">Amount (Rs.)<br/>(INR)</th>
+                  <th className="pb-th-num">Amount (Rs.)<br />(INR)</th>
                   <th className="pb-th-num">Total (INR)</th>
                 </tr>
               </thead>
@@ -1646,7 +1646,7 @@ const Invoice = () => {
                     </td>
                   </tr>
                 ))}
-                
+
                 {/* Additional Fees listed individually in the Total column */}
                 {printableAdditionalCharges.map((item, i) => (
                   <tr key={`e-${i}`} className="pb-data-row pb-extra-row">
@@ -1657,7 +1657,7 @@ const Invoice = () => {
                     <td className="pb-td-total"><strong>{formatBillAmount(item.amount)}</strong></td>
                   </tr>
                 ))}
-                
+
                 {/* Extras Round Off */}
                 <tr className="pb-data-row pb-extra-row">
                   <td className="pb-td-desc">EXTRAS ROUND OFF</td>
