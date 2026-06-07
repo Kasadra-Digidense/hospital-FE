@@ -65,34 +65,37 @@ const buildPatientAddress = (address = {}, fallbackPlace = "") => {
   return fallbackPlace || "Address not available";
 };
 
-const normalizeTreatment = (treatment) => {
-  const hasChargeTypeMetadata =
-    treatment?.type != null ||
-    treatment?.charge_type != null ||
-    treatment?.chargeType != null ||
-    treatment?.type_name != null ||
-    treatment?.typeName != null;
-
-  const id = treatment?.id ?? treatment?.item_id ?? treatment?._id;
-  const name = treatment?.item_name ?? treatment?.itemName ?? "";
-
-  if (hasChargeTypeMetadata || id == null || !String(name).trim()) {
-    return null;
-  }
-
-  return {
-    id,
-    name: String(name).trim(),
-    rate: Number(
-      treatment?.price ??
-        treatment?.item_price ??
-        treatment?.itemPrice ??
-        treatment?.item_rate ??
-        treatment?.itemRate ??
-        0,
-    ),
-  };
-};
+const normalizeTreatment = (treatment) => ({
+  id:
+    treatment.id ??
+    treatment._id ??
+    treatment.treatmentId ??
+    treatment.item_id ??
+    treatment.item_name ??
+    treatment.name ??
+    treatment.treatmentName ??
+    treatment.treatment_name,
+  name:
+    treatment.item_name ??
+    treatment.itemName ??
+    treatment.name ??
+    treatment.treatmentName ??
+    treatment.treatment_name ??
+    treatment.title ??
+    "",
+  rate: Number(
+    treatment.item_rate ??
+      treatment.itemRate ??
+      treatment.item_price ??
+      treatment.itemPrice ??
+    treatment.rate ??
+      treatment.amount ??
+      treatment.price ??
+      treatment.fee ??
+      treatment.charge ??
+      0,
+  ),
+});
 
 const normalizePatient = (patient) => ({
   id: patient.id,
@@ -216,7 +219,7 @@ const Invoice = () => {
     const start = new Date(admissionData.admissionDate);
     const end = new Date(admissionData.dischargeDate);
     const diffTime = Math.abs(end - start);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 0;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   }, [admissionData.admissionDate, admissionData.dischargeDate]);
 
   useEffect(() => {
@@ -316,6 +319,8 @@ const Invoice = () => {
     setValidationErrors({});
     setActiveStep(targetStep);
   };
+
+  // changes made
 
   const nextStep = () => goToStep(Math.min(activeStep + 1, 6));
   const prevStep = () => goToStep(Math.max(activeStep - 1, 1));
@@ -919,10 +924,10 @@ const Invoice = () => {
                                     )}
                                     {(row.room
                                       ? roomOptions.filter((opt) =>
-                                          `${opt.name} ${opt.group}`
-                                            .toLowerCase()
-                                            .includes(row.room.toLowerCase()),
-                                        )
+                                        `${opt.name} ${opt.group}`
+                                          .toLowerCase()
+                                          .includes(row.room.toLowerCase()),
+                                      )
                                       : roomOptions
                                     ).map((opt) => (
                                       <div
@@ -1090,12 +1095,12 @@ const Invoice = () => {
                                   <div className="table-dropdown">
                                     {(row.treatment
                                       ? treatmentOptions.filter((opt) =>
-                                          opt.name
-                                            .toLowerCase()
-                                            .includes(
-                                              row.treatment.toLowerCase(),
-                                            ),
-                                        )
+                                        opt.name
+                                          .toLowerCase()
+                                          .includes(
+                                            row.treatment.toLowerCase(),
+                                          ),
+                                      )
                                       : treatmentOptions
                                     ).map((opt) => (
                                       <div
@@ -1698,11 +1703,7 @@ const Invoice = () => {
                   <th className="pb-th-desc">Description</th>
                   <th className="pb-th-num">Qty</th>
                   <th className="pb-th-num">Rate (INR)</th>
-                  <th className="pb-th-num">
-                    Amount (Rs.)
-                    <br />
-                    (INR)
-                  </th>
+                  <th className="pb-th-num">Amount (Rs.)<br/>(INR)</th>
                   <th className="pb-th-num">Total (INR)</th>
                 </tr>
               </thead>
@@ -1759,8 +1760,8 @@ const Invoice = () => {
                     </td>
                   </tr>
                 ))}
-
-                {/* Additional Fees */}
+                
+                {/* Additional Fees listed individually in the Total column */}
                 {printableAdditionalCharges.map((item, i) => (
                   <tr key={`e-${i}`} className="pb-data-row pb-extra-row">
                     <td className="pb-td-desc">{item.type.toUpperCase()}</td>
