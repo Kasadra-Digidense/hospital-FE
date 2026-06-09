@@ -25,6 +25,7 @@ const DEFAULT_TREATMENT_OPTIONS = [
 const ADDITIONAL_CHARGE_TYPES = [
   "Doctor Fee",
   "Nurse Fee",
+  "Food Charges",
   "Consumables",
   "Registration Fee",
   "Miscellaneous",
