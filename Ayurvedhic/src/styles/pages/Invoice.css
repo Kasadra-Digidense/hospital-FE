@@ -60,6 +60,10 @@
     flex: 1;
 }
 
+.invoice-main-layout.preview-mode {
+    grid-template-columns: 1fr;
+}
+
 /* --- SIDEBAR NAVIGATION --- */
 .invoice-steps-sidebar {
     background: #f8fafc;
@@ -1204,17 +1208,17 @@
         box-shadow: none;
     }
 
-    .pb-hospital-name { font-size: 22px; }
-    .pb-logo-img { width: 44px; height: 44px; }
-    .pb-contact-line,
-    .pb-cell-sub,
-    .pb-kv,
-    .pb-data-row td,
-    .pb-subtotal-row td,
-    .pb-total-row { font-size: 10px; }
-    .pb-section-row td { font-size: 9.5px; }
-    .pb-balance-row strong { font-size: 12px; }
-    .pb-sig-label { font-size: 9px; }
+    .pb-hospital-name { font-size: 24px; }
+.pb-logo-img { width: 60px; height: 60px; }
+.pb-contact-line,
+.pb-cell-sub,
+.pb-kv,
+.pb-data-row td,
+.pb-subtotal-row td,
+.pb-total-row { font-size: 12px; }
+.pb-section-row td { font-size: 11px; }
+.pb-balance-row strong { font-size: 14px; }
+.pb-sig-label { font-size: 10px; }
 
     @page {
         size: A4;
@@ -1257,7 +1261,7 @@
 }
 
 .pb-brand-name {
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 700;
     letter-spacing: 1px;
     color: #d6861c; /* Saffron color */
@@ -1266,7 +1270,7 @@
 }
 
 .pb-brand-tag {
-    font-size: 11px;
+    font-size: 13px;
     color: #7b9d4d; /* Green color */
     line-height: 1.1;
     text-transform: lowercase;
@@ -1279,7 +1283,7 @@
 }
 
 .pb-contact-line {
-    font-size: 11px;
+    font-size: 13px;
     line-height: 1.4;
     color: #000;
 }
@@ -1292,7 +1296,7 @@
     color: #000;
     border-radius: 0;
     text-align: center;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     letter-spacing: 0;
     text-transform: uppercase;
@@ -1311,7 +1315,7 @@
     min-height: 100px;
     padding: 6px 8px;
     border-right: 1px solid #000;
-    font-size: 11px;
+    font-size: 13px;
     line-height: 1.2;
     display: flex;
     flex-direction: column;
@@ -1325,7 +1329,7 @@
     margin: -6px -8px 6px;
     padding: 4px 8px;
     border-bottom: 1px solid #000;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     color: #000;
 }
@@ -1360,7 +1364,7 @@
 .pb-th-desc,
 .pb-th-num {
     padding: 8px 4px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     color: #000;
     background: transparent;
@@ -1389,7 +1393,7 @@
     border-left: 1px solid #000;
     border-right: 1px solid #000;
     padding: 6px 8px;
-    font-size: 11px;
+    font-size: 13px;
     color: #000;
     background: transparent;
     border-top: none;
@@ -1412,7 +1416,7 @@
 }
 
 .pb-inline-unit {
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .pb-subtotal-row td {
@@ -1426,7 +1430,7 @@
     padding: 5px 6px;
     height: auto;
     line-height: 1.1;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
 }
 
@@ -1440,7 +1444,7 @@
 .pb-grand-row td {
     border-top: 1px solid #000;
     border-bottom: 1px solid #000;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
 }
 
@@ -1477,7 +1481,7 @@
 }
 
 .pb-footer-box .pb-footer-note {
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.3;
     color: #000;
     margin: 0;
@@ -1491,7 +1495,7 @@
 }
 
 .pb-footer-sign-label {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     color: #000;
     text-align: center;
@@ -1504,7 +1508,7 @@
 
 .pb-footer-prepared-label,
 .pb-footer-prepared-name {
-    font-size: 11px;
+    font-size: 13px;
     color: #000;
     text-align: center;
     font-weight: 700;
@@ -1533,6 +1537,36 @@
     width: 100%;
 }
 
+/* --- PREVIEW EDIT STYLES --- */
+.preview-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e0f2fe;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-left: 12px;
+    transition: all 0.2s;
+    text-transform: none;
+    letter-spacing: normal;
+    text-decoration: none;
+    vertical-align: middle;
+}
+.preview-edit-btn:hover {
+    background: #bae6fd;
+    color: #0369a1;
+}
+
+@media print {
+    .preview-edit-btn {
+        display: none !important;
+    }
+}
 
 /* =========================================
    Simple Page Load Animations
