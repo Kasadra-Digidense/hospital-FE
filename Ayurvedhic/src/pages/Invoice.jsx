@@ -187,6 +187,7 @@ const Invoice = () => {
     fetchError: treatmentsError,
   } = useSelector((state) => state.treatments);
   const [activeStep, setActiveStep] = useState(1);
+  const [isEditingFromPreview, setIsEditingFromPreview] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
   // PAGE 1: Patient Data
@@ -212,6 +213,7 @@ const Invoice = () => {
 
   // PAGE 6: Payment Details
   const [payments, setPayments] = useState(createInitialPayments);
+  const [advanceAmount, setAdvanceAmount] = useState(0);
 
   // LOGIC: Days Calculation
   const calculatedDays = useMemo(() => {
@@ -231,6 +233,12 @@ const Invoice = () => {
     }
     dispatch(fetchDoctors());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (activeStep === 5) {
+      setIsEditingFromPreview(false);
+    }
+  }, [activeStep]);
 
   useEffect(() => {
     if (!treatmentsFetchLoading && treatments.length === 0) {
@@ -257,19 +265,21 @@ const Invoice = () => {
       (sum, p) => sum + (parseFloat(p.amount) || 0),
       0,
     );
-    const totalPaid = currentPaid;
-    const balance = gross - totalPaid;
+    const advance = parseFloat(advanceAmount) || 0;
+    const totalPaid = currentPaid + advance;
+    const balance = gross - advance - currentPaid;
 
     return {
       roomTotal,
       treatmentTotal,
       extraTotal,
       gross,
+      advance,
       currentPaid,
       totalPaid,
       balance,
     };
-  }, [roomCharges, treatmentCharges, additionalCharges, payments]);
+  }, [roomCharges, treatmentCharges, additionalCharges, payments, advanceAmount]);
 
   // HANDLERS
   const validateStep = (step) => {
@@ -322,7 +332,13 @@ const Invoice = () => {
 
   // changes made
 
-  const nextStep = () => goToStep(Math.min(activeStep + 1, 6));
+  const nextStep = () => {
+    if (isEditingFromPreview) {
+      goToStep(5);
+    } else {
+      goToStep(Math.min(activeStep + 1, 6));
+    }
+  };
   const prevStep = () => goToStep(Math.max(activeStep - 1, 1));
 
   const handlePatientSelect = (p) => {
@@ -515,6 +531,7 @@ const Invoice = () => {
       treatment_total: totals.treatmentTotal,
       extra_total: totals.extraTotal,
       gross_total: totals.gross,
+      advance_amount: totals.advance,
       total_paid: totals.totalPaid,
       balance: totals.balance,
       room_charges: invoiceRoomCharges,
@@ -557,6 +574,7 @@ const Invoice = () => {
     setTreatmentCharges(createInitialTreatmentCharges());
     setAdditionalCharges(createInitialAdditionalCharges());
     setPayments(createInitialPayments());
+    setAdvanceAmount(0);
     dispatch(resetInvoiceCreation());
   };
 
@@ -569,6 +587,189 @@ const Invoice = () => {
     window.addEventListener("afterprint", resetAfterPrint);
     window.print();
   };
+
+  const handlePreviewEdit = (step) => {
+    setIsEditingFromPreview(true);
+    goToStep(step);
+  };
+
+  const renderPrintableBill = (isPreview = false) => (
+    <div className="printable-bill" style={isPreview ? { margin: "0 auto", transform: "scale(0.95)", transformOrigin: "top center", boxShadow: "0 10px 30px rgba(0,0,0,0.1)", border: "1px solid #e2e8f0" } : {}}>
+      {/* ── HEADER ── */}
+      <div className="pb-header">
+        <img src={ayurLogo} alt="Anjaneyam Logo" className="pb-logo-img" />
+        <div className="pb-contact-block">
+          <div className="pb-contact-line">Machiyil, Padiyottuchal</div>
+          <div className="pb-contact-line">
+            +91 6282 422 323, +91 62824 224500, +91 4985 294 222
+          </div>
+          <div className="pb-contact-line">
+            www.anjaneyamhospital.com, Mail: care@anjaneyamhospital.com
+          </div>
+        </div>
+      </div>
+
+      {/* ── TITLE BAND ── */}
+      <div className="pb-title-band">
+        <span>DISCHARGE BILL {isPreview && "(PREVIEW)"}</span>
+      </div>
+
+      {/* ── PATIENT INFO ── */}
+      <div className="pb-info-grid">
+        <div className="pb-info-cell" style={{ position: "relative" }}>
+          <div className="pb-cell-label">
+            Name and Address
+            {isPreview && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(1)}>Edit</button>}
+          </div>
+          <div className="pb-cell-content">
+            <div className="pb-cell-row">Name : {selectedPatient?.name || "-"}</div>
+            <div className="pb-cell-row">{selectedPatient?.address || "-"}</div>
+            <div className="pb-cell-row">Age : {selectedPatient?.age || "-"}</div>
+            <div className="pb-cell-row">Gender : {selectedPatient?.gender || "-"}</div>
+          </div>
+        </div>
+        <div className="pb-info-cell" style={{ position: "relative" }}>
+          <div className="pb-kv-alt"><strong>MRD No: {selectedPatient?.mrd || "-"}</strong></div>
+          <div className="pb-kv-alt"><strong>IP No: {selectedPatient?.ipNumber || "-"}</strong></div>
+          <div className="pb-kv-alt">Admission :{formatBillDate(admissionData.admissionDate)}</div>
+          <div className="pb-kv-alt">Discharge :{formatBillDate(admissionData.dischargeDate)}</div>
+          {isPreview && <button className="preview-edit-btn" style={{ position: "absolute", top: "6px", right: "6px" }} onClick={() => handlePreviewEdit(2)}>Edit</button>}
+        </div>
+        <div className="pb-info-cell">
+          <div className="pb-kv-alt"><strong>Bill No :{isPreview ? "-" : generatedBillNumber}</strong></div>
+          <div className="pb-kv-alt">Consultant : {admissionData.consultant || "-"}</div>
+          <div className="pb-kv-alt">Date : {formatBillDate(admissionData.dischargeDate || new Date())}</div>
+          <div className="pb-kv-alt">Days : {calculatedDays || 0}</div>
+        </div>
+      </div>
+
+      {/* ── CHARGES TABLE ── */}
+      <table className="pb-table">
+        <thead>
+          <tr>
+            <th className="pb-th-desc">Description</th>
+            <th className="pb-th-num">Qty</th>
+            <th className="pb-th-num">Rate (INR)</th>
+            <th className="pb-th-num">Amount (Rs.)<br />(INR)</th>
+            <th className="pb-th-num">Total (INR)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {/* Room Rent Section */}
+          {printableRoomCharges.map((item, i) => (
+            <tr key={`r-${i}`} className="pb-data-row">
+              <td className="pb-td-desc">
+                Room Rent [{item.room}]
+                {isPreview && i === 0 && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(2)}>Edit</button>}
+              </td>
+              <td className="pb-td-num">{item.days}</td>
+              <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
+              <td className="pb-td-num">{formatBillAmount(item.amount)}</td>
+              <td className="pb-td-total">
+                {i === printableRoomCharges.length - 1 ? <strong>{formatBillAmount(totals.roomTotal)}</strong> : ""}
+              </td>
+            </tr>
+          ))}
+
+          {/* Treatment Charges Header */}
+          {printableTreatmentCharges.length > 0 && (
+            <tr className="pb-section-row">
+              <td className="pb-td-desc">
+                TREATMENT CHARGES
+                {isPreview && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(3)}>Edit</button>}
+              </td>
+              <td></td><td></td><td></td><td className="pb-td-total"></td>
+            </tr>
+          )}
+
+          {/* Treatments List */}
+          {printableTreatmentCharges.map((item, i) => (
+            <tr key={`t-${i}`} className="pb-data-row">
+              <td className="pb-td-desc">&nbsp;&nbsp;{item.treatment.toUpperCase()}</td>
+              <td className="pb-td-num">{item.qty} Nos</td>
+              <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
+              <td className="pb-td-num">{formatBillAmount(item.amount)}</td>
+              <td className="pb-td-total">
+                {i === printableTreatmentCharges.length - 1 ? <strong>{formatBillAmount(totals.treatmentTotal)}</strong> : ""}
+              </td>
+            </tr>
+          ))}
+
+          {/* Additional Fees */}
+          {printableAdditionalCharges.map((item, i) => (
+            <tr key={`e-${i}`} className="pb-data-row pb-extra-row">
+              <td className="pb-td-desc">
+                {item.type.toUpperCase()}
+                {isPreview && i === 0 && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(3)}>Edit</button>}
+              </td>
+              <td className="pb-td-num">{toNumber(item.qty)}</td>
+              <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
+              <td className="pb-td-num">{formatBillAmount(item.amount)}</td>
+              <td className="pb-td-total">
+                {i === printableAdditionalCharges.length - 1 ? <strong>{formatBillAmount(totals.extraTotal)}</strong> : ""}
+              </td>
+            </tr>
+          ))}
+
+          {/* Extras Round Off */}
+          <tr className="pb-data-row pb-extra-row">
+            <td className="pb-td-desc">EXTRAS ROUND OFF</td>
+            <td className="pb-td-num"></td><td className="pb-td-num"></td><td className="pb-td-num"></td>
+            <td className="pb-td-total"><strong>0.00</strong></td>
+          </tr>
+
+          {/* Grand Totals */}
+          <tr className="pb-grand-row">
+            <td className="pb-grand-label">Total Bill Amount</td>
+            <td></td><td></td><td></td>
+            <td className="pb-grand-value"><strong>{formatBillAmount(totals.gross)}</strong></td>
+          </tr>
+          <tr className="pb-grand-row">
+            <td className="pb-grand-label">
+              Advance Amount Paid
+              {isPreview && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(4)}>Edit</button>}
+            </td>
+            <td></td><td></td>
+            <td className="pb-td-num"><strong>{formatBillAmount(totals.advance)}</strong></td>
+            <td className="pb-grand-value"><strong>{formatBillAmount(totals.advance)}</strong></td>
+          </tr>
+          {printablePayments.map((item, i) => (
+            <tr key={`p-${i}`} className="pb-grand-row pb-payment-row">
+              <td className="pb-grand-label">
+                Amount Paid ({item.method.toUpperCase()})
+                {isPreview && i === 0 && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(4)}>Edit</button>}
+              </td>
+              <td></td><td></td><td></td>
+              <td className="pb-grand-value"><strong>{formatBillAmount(item.amount)}</strong></td>
+            </tr>
+          ))}
+          <tr className="pb-grand-row" style={{ backgroundColor: "#f9fafb" }}>
+            <td className="pb-grand-label">Remaining Amount Payable</td>
+            <td></td><td></td><td></td>
+            <td className="pb-grand-value">
+              <strong style={{ color: totals.balance > 0 ? "#dc2626" : "#16a34a" }}>
+                {formatBillAmount(totals.balance)}
+              </strong>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* ── FOOTER ── */}
+      <div className="pb-footer-box">
+        <div className="pb-footer-note">
+          I Agree that I am responsible for the full payment of the bill
+          in the event it is not paid by the company or person indicated.
+        </div>
+        <div className="pb-footer-sign">
+          <div className="pb-footer-sign-label">Auth. Signatory</div>
+        </div>
+        <div className="pb-footer-prepared">
+          <div className="pb-footer-prepared-label">PREPARED BY</div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div
@@ -592,31 +793,33 @@ const Invoice = () => {
             <div className="step-progress-pill">Step {activeStep} of 5</div>
           </div>
 
-          <div className="invoice-main-layout">
+          <div className={`invoice-main-layout ${activeStep === 5 ? "preview-mode" : ""}`}>
             {/* Step Navigation Sidebar */}
-            <aside className="invoice-steps-sidebar">
-              {[
-                { n: 1, label: "Select Patient", desc: "Search & Verify" },
-                { n: 2, label: "Stay Details", desc: "Stay & Rooms" },
-                { n: 3, label: "Treatments", desc: "Procedures & Extras" },
-                { n: 4, label: "Payments", desc: "Cash/UPI/Balance" },
-                { n: 5, label: "Review", desc: "Final Check" },
-              ].map((s) => (
-                <div
-                  key={s.n}
-                  className={`step-item ${activeStep === s.n ? "active" : activeStep > s.n ? "completed" : ""}`}
-                  onClick={() => goToStep(s.n)}
-                >
-                  <div className="step-number">
-                    {activeStep > s.n ? "✓" : s.n}
+            {activeStep !== 5 && (
+              <aside className="invoice-steps-sidebar">
+                {[
+                  { n: 1, label: "Select Patient", desc: "Search & Verify" },
+                  { n: 2, label: "Stay Details", desc: "Stay & Rooms" },
+                  { n: 3, label: "Treatments", desc: "Procedures & Extras" },
+                  { n: 4, label: "Payments", desc: "Cash/UPI/Balance" },
+                  { n: 5, label: "Review", desc: "Final Check" },
+                ].map((s) => (
+                  <div
+                    key={s.n}
+                    className={`step-item ${activeStep === s.n ? "active" : activeStep > s.n ? "completed" : ""}`}
+                    onClick={() => goToStep(s.n)}
+                  >
+                    <div className="step-number">
+                      {activeStep > s.n ? "✓" : s.n}
+                    </div>
+                    <div className="step-info">
+                      <span className="step-label">{s.label}</span>
+                      <span className="step-desc">{s.desc}</span>
+                    </div>
                   </div>
-                  <div className="step-info">
-                    <span className="step-label">{s.label}</span>
-                    <span className="step-desc">{s.desc}</span>
-                  </div>
-                </div>
-              ))}
-            </aside>
+                ))}
+              </aside>
+            )}
 
             {/* Page Content Rendering */}
             <main className="invoice-form-content">
@@ -1330,6 +1533,18 @@ const Invoice = () => {
                   <h2>Payment Information</h2>
                   <div className="payment-layout">
                     <div className="payment-table-side">
+                      <div className="modern-field" style={{ marginBottom: "20px" }}>
+                        <label>Advance Amount Paid</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={advanceAmount}
+                          onFocus={() => {
+                            if (Number(advanceAmount) === 0) setAdvanceAmount("");
+                          }}
+                          onChange={(e) => setAdvanceAmount(clampNonNegative(e.target.value))}
+                        />
+                      </div>
                       <div className="section-header-row">
                         <h3>Current Payments</h3>
                         <button
@@ -1412,16 +1627,16 @@ const Invoice = () => {
                     <div className="payment-summary-side">
                       <div className="summary-card">
                         <div className="sum-row">
-                          <span>Gross Total</span>{" "}
+                          <span>Total Bill Amount</span>{" "}
                           <strong>₹{totals.gross.toFixed(2)}</strong>
                         </div>
                         <div className="sum-row">
-                          <span>Current Payment</span>{" "}
-                          <strong>₹{totals.currentPaid.toFixed(2)}</strong>
+                          <span>Advance Amount</span>{" "}
+                          <strong>₹{totals.advance.toFixed(2)}</strong>
                         </div>
                         <div className="sum-divider"></div>
                         <div className="sum-row grand">
-                          <span>Balance Due</span>{" "}
+                          <span>Amount Payable</span>{" "}
                           <strong
                             className={totals.balance > 0 ? "due" : "settled"}
                           >
@@ -1434,90 +1649,14 @@ const Invoice = () => {
                 </div>
               )}
 
-              {/* PAGE 5: Review & Finalize */}
+              {/* PAGE 5: Review & Finalize (Preview) */}
               {activeStep === 5 && (
                 <div className="step-content">
                   <div className="review-header">
-                    <h2>Review Invoice</h2>
-                    {/* <div className="review-actions">
-                                <button className="draft-btn">Save Draft</button>
-                                <button className="generate-btn" onClick={() => setActiveStep(6)}>Generate & Print</button>
-                            </div> */}
+                    <h2>Bill Preview</h2>
                   </div>
-                  <div className="review-grid">
-                    <div className="review-section">
-                      <div className="section-head">
-                        <h4>Patient Info</h4>{" "}
-                        <button onClick={() => goToStep(1)}>Edit</button>
-                      </div>
-                      <p>
-                        <strong>{selectedPatient?.name}</strong>
-                      </p>
-                      <p>
-                        MRD: {selectedPatient?.mrd} | IP:{" "}
-                        {selectedPatient?.ipNumber || "-"} | Phone:{" "}
-                        {selectedPatient?.phone || "-"}
-                      </p>
-                    </div>
-                    <div className="review-section">
-                      <div className="section-head">
-                        <h4>Admission</h4>{" "}
-                        <button onClick={() => goToStep(2)}>Edit</button>
-                      </div>
-                      <p>
-                        {admissionData.admissionDate} to{" "}
-                        {admissionData.dischargeDate}
-                      </p>
-                      <p>Consultant: {admissionData.consultant}</p>
-                    </div>
-                    <div className="review-section full">
-                      <div className="section-head">
-                        <h4>Stay & Treatments</h4>{" "}
-                        <button onClick={() => goToStep(3)}>Edit</button>
-                      </div>
-                      <div className="review-list-grid">
-                        <div className="review-sublist">
-                          <h5>Rooms</h5>
-                          {roomCharges.map((r, i) => (
-                            <div key={i} className="review-list-item">
-                              {r.room} - {r.days} Days
-                            </div>
-                          ))}
-                        </div>
-                        <div className="review-sublist">
-                          <h5>Treatments</h5>
-                          {treatmentCharges.map((t, i) => (
-                            <div key={i} className="review-list-item">
-                              {t.treatment} x {t.qty}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="review-section">
-                      <div className="section-head">
-                        <h4>Financial Summary</h4>
-                      </div>
-                      <div className="review-sums">
-                        <div className="sum-line">
-                          <span>Rooms:</span> <span>₹{totals.roomTotal}</span>
-                        </div>
-                        <div className="sum-line">
-                          <span>Treatments:</span>{" "}
-                          <span>₹{totals.treatmentTotal}</span>
-                        </div>
-                        <div className="sum-line">
-                          <span>Extras:</span> <span>₹{totals.extraTotal}</span>
-                        </div>
-                        <div className="sum-line final">
-                          <span>Total:</span> <span>₹{totals.gross}</span>
-                        </div>
-                        <div className="sum-line balance">
-                          <span>Balance Due:</span>{" "}
-                          <span>₹{totals.balance}</span>
-                        </div>
-                      </div>
-                    </div>
+                  <div style={{ paddingBottom: "20px" }}>
+                    {renderPrintableBill(true)}
                   </div>
                 </div>
               )}
@@ -1541,7 +1680,7 @@ const Invoice = () => {
                 </button>
 
                 <div className="review-actions">
-                  {activeStep === 5 && (
+                  {/* {activeStep === 5 && (
                     <button className="nav-btn draft">
                       <svg
                         viewBox="0 0 24 24"
@@ -1555,11 +1694,11 @@ const Invoice = () => {
                       </svg>
                       Save Draft
                     </button>
-                  )}
+                  )} */}
 
                   {activeStep < 5 ? (
                     <button className="nav-btn primary" onClick={nextStep}>
-                      Next
+                      {isEditingFromPreview ? "Return to Preview" : "Next"}
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -1626,258 +1765,7 @@ const Invoice = () => {
           </div>
 
           {/* Printable A4 Bill */}
-          <div className="printable-bill">
-            {/* ── HEADER ── */}
-            <div className="pb-header">
-              <img
-                src={ayurLogo}
-                alt="Anjaneyam Logo"
-                className="pb-logo-img"
-              />
-              <div className="pb-contact-block">
-                <div className="pb-contact-line">Machiyil, Padiyottuchal</div>
-                <div className="pb-contact-line">
-                  +91 6282 422 323, +91 62824 224500, +91 4985 294 222
-                </div>
-                <div className="pb-contact-line">
-                  www.anjaneyamhospital.com, Mail: care@anjaneyamhospital.com
-                </div>
-              </div>
-            </div>
-
-            {/* ── TITLE BAND ── */}
-            <div className="pb-title-band">
-              <span>DISCHARGE BILL</span>
-            </div>
-
-            {/* ── PATIENT INFO ── */}
-            <div className="pb-info-grid">
-              <div className="pb-info-cell">
-                <div className="pb-cell-label">Name and Address</div>
-                <div className="pb-cell-content">
-                  <div className="pb-cell-row">
-                    Name : {selectedPatient?.name || "-"}
-                  </div>
-                  <div className="pb-cell-row">
-                    {selectedPatient?.address || "-"}
-                  </div>
-                  <div className="pb-cell-row">
-                    Age : {selectedPatient?.age || "-"}
-                  </div>
-                  <div className="pb-cell-row">
-                    Gender : {selectedPatient?.gender || "-"}
-                  </div>
-                </div>
-              </div>
-              <div className="pb-info-cell">
-                <div className="pb-kv-alt">
-                  <strong>MRD No: {selectedPatient?.mrd || "-"}</strong>
-                </div>
-                <div className="pb-kv-alt">
-                  <strong>IP No: {selectedPatient?.ipNumber || "-"}</strong>
-                </div>
-                <div className="pb-kv-alt">
-                  Admission :{formatBillDate(admissionData.admissionDate)}
-                </div>
-                <div className="pb-kv-alt">
-                  Discharge :{formatBillDate(admissionData.dischargeDate)}
-                </div>
-              </div>
-              <div className="pb-info-cell">
-                <div className="pb-kv-alt">
-                  <strong>Bill No :{generatedBillNumber}</strong>
-                </div>
-                <div className="pb-kv-alt">
-                  Consultant : {admissionData.consultant || "-"}
-                </div>
-                <div className="pb-kv-alt">
-                  Date : {formatBillDate(admissionData.dischargeDate || new Date())}
-                </div>
-                <div className="pb-kv-alt">Days : {calculatedDays || 0}</div>
-              </div>
-            </div>
-
-            {/* ── CHARGES TABLE ── */}
-            <table className="pb-table">
-              <thead>
-                <tr>
-                  <th className="pb-th-desc">Description</th>
-                  <th className="pb-th-num">Qty</th>
-                  <th className="pb-th-num">Rate (INR)</th>
-                  <th className="pb-th-num">Amount (Rs.)<br />(INR)</th>
-                  <th className="pb-th-num">Total (INR)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Room Rent Section */}
-                {printableRoomCharges.map((item, i) => (
-                  <tr key={`r-${i}`} className="pb-data-row">
-                    <td className="pb-td-desc">Room Rent [{item.room}]</td>
-                    <td className="pb-td-num">{item.days}</td>
-                    <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
-                    <td className="pb-td-num">
-                      {formatBillAmount(item.amount)}
-                    </td>
-                    <td className="pb-td-total">
-                      {i === printableRoomCharges.length - 1 ? (
-                        <strong>{formatBillAmount(totals.roomTotal)}</strong>
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                  </tr>
-                ))}
-
-                {/* Treatment Charges Header */}
-                {printableTreatmentCharges.length > 0 && (
-                  <tr className="pb-section-row">
-                    <td className="pb-td-desc">TREATMENT CHARGES</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td className="pb-td-total"></td>
-                  </tr>
-                )}
-
-                {/* Treatments List */}
-                {printableTreatmentCharges.map((item, i) => (
-                  <tr key={`t-${i}`} className="pb-data-row">
-                    <td className="pb-td-desc">
-                      &nbsp;&nbsp;{item.treatment.toUpperCase()}
-                    </td>
-                    <td className="pb-td-num">{item.qty} Nos</td>
-                    <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
-                    <td className="pb-td-num">
-                      {formatBillAmount(item.amount)}
-                    </td>
-                    <td className="pb-td-total">
-                      {i === printableTreatmentCharges.length - 1 ? (
-                        <strong>
-                          {formatBillAmount(totals.treatmentTotal)}
-                        </strong>
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                  </tr>
-                ))}
-
-                {/* Additional Fees listed individually in the Total column */}
-                {printableAdditionalCharges.map((item, i) => (
-                  <tr key={`e-${i}`} className="pb-data-row pb-extra-row">
-                    <td className="pb-td-desc">{item.type.toUpperCase()}</td>
-                    <td className="pb-td-num">{toNumber(item.qty)}</td>
-                    <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
-                    <td className="pb-td-num">
-                      {formatBillAmount(item.amount)}
-                    </td>
-                    <td className="pb-td-total">
-                      {i === printableAdditionalCharges.length - 1 ? (
-                        <strong>{formatBillAmount(totals.extraTotal)}</strong>
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                  </tr>
-                ))}
-
-                {/* Extras Round Off */}
-                <tr className="pb-data-row pb-extra-row">
-                  <td className="pb-td-desc">EXTRAS ROUND OFF</td>
-                  <td className="pb-td-num"></td>
-                  <td className="pb-td-num"></td>
-                  <td className="pb-td-num"></td>
-                  <td className="pb-td-total">
-                    <strong>0.00</strong>
-                  </td>
-                </tr>
-
-                {/* Grand Totals */}
-                <tr className="pb-grand-row">
-                  <td className="pb-grand-label">Gross Total</td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td className="pb-grand-value">
-                    <strong>{formatBillAmount(totals.gross)}</strong>
-                  </td>
-                </tr>
-                <tr className="pb-grand-row">
-                  <td className="pb-grand-label">Total Advance</td>
-                  <td></td>
-                  <td></td>
-                  <td className="pb-td-num">
-                    <strong>{formatBillAmount(totals.currentPaid)}</strong>
-                  </td>
-                  <td className="pb-grand-value">
-                    <strong>{formatBillAmount(totals.currentPaid)}</strong>
-                  </td>
-                </tr>
-                {printablePayments.map((item, i) => (
-                  <tr key={`p-${i}`} className="pb-grand-row pb-payment-row">
-                    <td className="pb-grand-label">
-                      Amount Paid ({item.method.toUpperCase()})
-                    </td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td className="pb-grand-value">
-                      <strong>{formatBillAmount(item.amount)}</strong>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* ── FINANCIAL SUMMARY ── */}
-            <div className="pb-summary-wrap-test">
-              {/* Payment Breakdown */}
-              <div className="pb-payment-breakdown">
-                <div className="pb-breakdown-title">Payment Details</div>
-                {payments
-                  .filter((p) => parseFloat(p.amount) > 0)
-                  .map((p, i) => (
-                    <div key={i} className="pb-breakdown-row">
-                      <span>{p.method}</span>
-                      <span>₹ {parseFloat(p.amount).toFixed(2)}</span>
-                    </div>
-                  ))}
-              </div>
-
-              {/* Totals Box */}
-              <div className="pb-totals-box">
-                <div className="pb-total-row pb-gross-row">
-                  <span>Gross Total</span>
-                  <span>₹ {totals.gross.toFixed(2)}</span>
-                </div>
-                <div className="pb-total-row pb-deduct-row">
-                  <span>Amount Paid (–)</span>
-                  <span>₹ {totals.currentPaid.toFixed(2)}</span>
-                </div>
-                <div className="pb-total-divider" />
-                <div
-                  className={`pb-total-row pb-balance-row ${totals.balance > 0 ? "pb-balance-due" : "pb-balance-clear"}`}
-                >
-                  <span>Balance Due</span>
-                  <strong>₹ {totals.balance.toFixed(2)}</strong>
-                </div>
-              </div>
-            </div>
-
-            {/* ── FOOTER ── */}
-            <div className="pb-footer-box">
-              <div className="pb-footer-note">
-                I Agree that I am responsible for the full payment of the bill
-                in the event it is not paid by the company or person indicated.
-              </div>
-              <div className="pb-footer-sign">
-                <div className="pb-footer-sign-label">Auth. Signatory</div>
-              </div>
-              <div className="pb-footer-prepared">
-                <div className="pb-footer-prepared-label">PREPARED BY</div>
-              </div>
-            </div>
-          </div>
+          {renderPrintableBill(false)}
         </div>
       )}
     </div>
