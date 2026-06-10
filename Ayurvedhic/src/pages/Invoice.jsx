@@ -189,6 +189,7 @@ const Invoice = () => {
   } = useSelector((state) => state.treatments);
   const [activeStep, setActiveStep] = useState(1);
   const [isEditingFromPreview, setIsEditingFromPreview] = useState(false);
+  const [isPreviewPrinting, setIsPreviewPrinting] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
   // PAGE 1: Patient Data
@@ -617,6 +618,19 @@ const Invoice = () => {
     window.print();
   };
 
+  const handlePrintPreviewCopy = () => {
+    const restoreAfterPrint = () => {
+      window.removeEventListener("afterprint", restoreAfterPrint);
+      setIsPreviewPrinting(false);
+    };
+
+    setIsPreviewPrinting(true);
+    window.addEventListener("afterprint", restoreAfterPrint);
+    window.setTimeout(() => {
+      window.print();
+    }, 0);
+  };
+
   const handlePreviewEdit = (step) => {
     setIsEditingFromPreview(true);
     goToStep(step);
@@ -629,7 +643,6 @@ const Invoice = () => {
         isPreview
           ? {
               margin: "0 auto",
-              transform: "scale(0.95)",
               transformOrigin: "top center",
               boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
               border: "1px solid #e2e8f0",
@@ -927,7 +940,9 @@ const Invoice = () => {
 
   return (
     <div
-      className={`invoice-container ${activeStep === 6 ? "print-ready" : ""}`}
+      className={`invoice-container ${activeStep === 6 ? "print-ready" : ""} ${
+        isPreviewPrinting ? "preview-print-mode" : ""
+      }`}
       onClick={() => {
         setShowPatientList(false);
         setRoomCharges((prev) => prev.map((r) => ({ ...r, showList: false })));
@@ -1837,7 +1852,10 @@ const Invoice = () => {
                   <div className="review-header">
                     <h2>Bill Preview</h2>
                   </div>
-                  <div style={{ paddingBottom: "20px" }}>
+                  <div
+                    className="preview-print-area"
+                    style={{ paddingBottom: "20px" }}
+                  >
                     {renderPrintableBill(true)}
                   </div>
                 </div>
@@ -1891,24 +1909,41 @@ const Invoice = () => {
                       </svg>
                     </button>
                   ) : activeStep === 5 ? (
-                    <button
-                      className="nav-btn success"
-                      disabled={createStatus === "loading"}
-                      onClick={handleGenerateAndPrint}
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
+                    <>
+                      <button
+                        className="nav-btn draft"
+                        disabled={createStatus === "loading"}
+                        onClick={handlePrintPreviewCopy}
                       >
-                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-                        <polyline points="13 2 13 9 20 9" />
-                      </svg>
-                      {createStatus === "loading"
-                        ? "Generating..."
-                        : "Generate & Print"}
-                    </button>
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
+                        </svg>
+                        Print Preview Copy
+                      </button>
+                      <button
+                        className="nav-btn success"
+                        disabled={createStatus === "loading"}
+                        onClick={handleGenerateAndPrint}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                          <polyline points="13 2 13 9 20 9" />
+                        </svg>
+                        {createStatus === "loading"
+                          ? "Generating..."
+                          : "Generate & Print"}
+                      </button>
+                    </>
                   ) : null}
                 </div>
               </div>
