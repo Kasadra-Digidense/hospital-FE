@@ -86,15 +86,15 @@ const normalizeTreatment = (treatment) => ({
     "",
   rate: Number(
     treatment.item_rate ??
-    treatment.itemRate ??
-    treatment.item_price ??
-    treatment.itemPrice ??
-    treatment.rate ??
-    treatment.amount ??
-    treatment.price ??
-    treatment.fee ??
-    treatment.charge ??
-    0,
+      treatment.itemRate ??
+      treatment.item_price ??
+      treatment.itemPrice ??
+      treatment.rate ??
+      treatment.amount ??
+      treatment.price ??
+      treatment.fee ??
+      treatment.charge ??
+      0,
   ),
 });
 
@@ -189,6 +189,7 @@ const Invoice = () => {
   } = useSelector((state) => state.treatments);
   const [activeStep, setActiveStep] = useState(1);
   const [isEditingFromPreview, setIsEditingFromPreview] = useState(false);
+  const [isPreviewPrinting, setIsPreviewPrinting] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
   // PAGE 1: Patient Data
@@ -280,7 +281,13 @@ const Invoice = () => {
       totalPaid,
       balance,
     };
-  }, [roomCharges, treatmentCharges, additionalCharges, payments, advanceAmount]);
+  }, [
+    roomCharges,
+    treatmentCharges,
+    additionalCharges,
+    payments,
+    advanceAmount,
+  ]);
 
   // HANDLERS
   const validateStep = (step) => {
@@ -406,16 +413,38 @@ const Invoice = () => {
   const handleAdditionalChargeChange = (index, field, value) => {
     const newRows = [...additionalCharges];
 
-    if (field === "qty" || field === "rate") {
+    if (field === "type") {
+      newRows[index].type = value;
+
+      // Food Charges select பண்ணும்போது
+      if (value === "Food Charges") {
+        newRows[index].qty = 1;
+        newRows[index].rate = 0;
+        newRows[index].amount = 0;
+      }
+
+      setAdditionalCharges(newRows);
+      return;
+    }
+
+    if (field === "qty" || field === "rate" || field === "amount") {
       value = clampNonNegative(value);
     }
 
     newRows[index][field] = value;
 
-    if (field === "qty" || field === "rate") {
-      newRows[index].amount =
-        Math.max(0, parseFloat(newRows[index].qty) || 0) *
-        Math.max(0, parseFloat(newRows[index].rate) || 0);
+    // Food Charges க்கு amount மட்டும் manual entry
+    if (newRows[index].type === "Food Charges") {
+      if (field === "amount") {
+        newRows[index].amount = value;
+      }
+    } else {
+      // மற்ற charges க்கு Qty × Rate
+      if (field === "qty" || field === "rate") {
+        newRows[index].amount =
+          Math.max(0, parseFloat(newRows[index].qty) || 0) *
+          Math.max(0, parseFloat(newRows[index].rate) || 0);
+      }
     }
 
     setAdditionalCharges(newRows);
@@ -589,13 +618,38 @@ const Invoice = () => {
     window.print();
   };
 
+  const handlePrintPreviewCopy = () => {
+    const restoreAfterPrint = () => {
+      window.removeEventListener("afterprint", restoreAfterPrint);
+      setIsPreviewPrinting(false);
+    };
+
+    setIsPreviewPrinting(true);
+    window.addEventListener("afterprint", restoreAfterPrint);
+    window.setTimeout(() => {
+      window.print();
+    }, 0);
+  };
+
   const handlePreviewEdit = (step) => {
     setIsEditingFromPreview(true);
     goToStep(step);
   };
 
   const renderPrintableBill = (isPreview = false) => (
-    <div className="printable-bill" style={isPreview ? { margin: "0 auto", transform: "scale(0.95)", transformOrigin: "top center", boxShadow: "0 10px 30px rgba(0,0,0,0.1)", border: "1px solid #e2e8f0" } : {}}>
+    <div
+      className="printable-bill"
+      style={
+        isPreview
+          ? {
+              margin: "0 auto",
+              transformOrigin: "top center",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+              border: "1px solid #e2e8f0",
+            }
+          : {}
+      }
+    >
       {/* ── HEADER ── */}
       <div className="pb-header">
         <img src={ayurLogo} alt="Anjaneyam Logo" className="pb-logo-img" />
@@ -620,26 +674,61 @@ const Invoice = () => {
         <div className="pb-info-cell" style={{ position: "relative" }}>
           <div className="pb-cell-label">
             Name and Address
-            {isPreview && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(1)}>Edit</button>}
+            {isPreview && (
+              <button
+                className="preview-edit-btn"
+                onClick={() => handlePreviewEdit(1)}
+              >
+                Edit
+              </button>
+            )}
           </div>
           <div className="pb-cell-content">
-            <div className="pb-cell-row">Name : {selectedPatient?.name || "-"}</div>
+            <div className="pb-cell-row">
+              Name : {selectedPatient?.name || "-"}
+            </div>
             <div className="pb-cell-row">{selectedPatient?.address || "-"}</div>
-            <div className="pb-cell-row">Age : {selectedPatient?.age || "-"}</div>
-            <div className="pb-cell-row">Gender : {selectedPatient?.gender || "-"}</div>
+            <div className="pb-cell-row">
+              Age : {selectedPatient?.age || "-"}
+            </div>
+            <div className="pb-cell-row">
+              Gender : {selectedPatient?.gender || "-"}
+            </div>
           </div>
         </div>
         <div className="pb-info-cell" style={{ position: "relative" }}>
-          <div className="pb-kv-alt"><strong>MRD No: {selectedPatient?.mrd || "-"}</strong></div>
-          <div className="pb-kv-alt"><strong>IP No: {selectedPatient?.ipNumber || "-"}</strong></div>
-          <div className="pb-kv-alt">Admission :{formatBillDate(admissionData.admissionDate)}</div>
-          <div className="pb-kv-alt">Discharge :{formatBillDate(admissionData.dischargeDate)}</div>
-          {isPreview && <button className="preview-edit-btn" style={{ position: "absolute", top: "6px", right: "6px" }} onClick={() => handlePreviewEdit(2)}>Edit</button>}
+          <div className="pb-kv-alt">
+            <strong>MRD No: {selectedPatient?.mrd || "-"}</strong>
+          </div>
+          <div className="pb-kv-alt">
+            <strong>IP No: {selectedPatient?.ipNumber || "-"}</strong>
+          </div>
+          <div className="pb-kv-alt">
+            Admission :{formatBillDate(admissionData.admissionDate)}
+          </div>
+          <div className="pb-kv-alt">
+            Discharge :{formatBillDate(admissionData.dischargeDate)}
+          </div>
+          {isPreview && (
+            <button
+              className="preview-edit-btn"
+              style={{ position: "absolute", top: "6px", right: "6px" }}
+              onClick={() => handlePreviewEdit(2)}
+            >
+              Edit
+            </button>
+          )}
         </div>
         <div className="pb-info-cell">
-          <div className="pb-kv-alt"><strong>Bill No :{isPreview ? "-" : generatedBillNumber}</strong></div>
-          <div className="pb-kv-alt">Consultant : {admissionData.consultant || "-"}</div>
-          <div className="pb-kv-alt">Date : {formatBillDate(admissionData.dischargeDate || new Date())}</div>
+          <div className="pb-kv-alt">
+            <strong>Bill No :{isPreview ? "-" : generatedBillNumber}</strong>
+          </div>
+          <div className="pb-kv-alt">
+            Consultant : {admissionData.consultant || "-"}
+          </div>
+          <div className="pb-kv-alt">
+            Date : {formatBillDate(admissionData.dischargeDate || new Date())}
+          </div>
           <div className="pb-kv-alt">Days : {calculatedDays || 0}</div>
         </div>
       </div>
@@ -651,7 +740,11 @@ const Invoice = () => {
             <th className="pb-th-desc">Description</th>
             <th className="pb-th-num">Qty</th>
             <th className="pb-th-num">Rate (INR)</th>
-            <th className="pb-th-num">Amount (Rs.)<br />(INR)</th>
+            <th className="pb-th-num">
+              Amount (Rs.)
+              <br />
+              (INR)
+            </th>
             <th className="pb-th-num">Total (INR)</th>
           </tr>
         </thead>
@@ -661,13 +754,24 @@ const Invoice = () => {
             <tr key={`r-${i}`} className="pb-data-row">
               <td className="pb-td-desc">
                 Room Rent [{item.room}]
-                {isPreview && i === 0 && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(2)}>Edit</button>}
+                {isPreview && i === 0 && (
+                  <button
+                    className="preview-edit-btn"
+                    onClick={() => handlePreviewEdit(2)}
+                  >
+                    Edit
+                  </button>
+                )}
               </td>
               <td className="pb-td-num">{item.days}</td>
               <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
               <td className="pb-td-num">{formatBillAmount(item.amount)}</td>
               <td className="pb-td-total">
-                {i === printableRoomCharges.length - 1 ? <strong>{formatBillAmount(totals.roomTotal)}</strong> : ""}
+                {i === printableRoomCharges.length - 1 ? (
+                  <strong>{formatBillAmount(totals.roomTotal)}</strong>
+                ) : (
+                  ""
+                )}
               </td>
             </tr>
           ))}
@@ -677,21 +781,37 @@ const Invoice = () => {
             <tr className="pb-section-row">
               <td className="pb-td-desc">
                 TREATMENT CHARGES
-                {isPreview && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(3)}>Edit</button>}
+                {isPreview && (
+                  <button
+                    className="preview-edit-btn"
+                    onClick={() => handlePreviewEdit(3)}
+                  >
+                    Edit
+                  </button>
+                )}
               </td>
-              <td></td><td></td><td></td><td className="pb-td-total"></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td className="pb-td-total"></td>
             </tr>
           )}
 
           {/* Treatments List */}
           {printableTreatmentCharges.map((item, i) => (
             <tr key={`t-${i}`} className="pb-data-row">
-              <td className="pb-td-desc">&nbsp;&nbsp;{item.treatment.toUpperCase()}</td>
+              <td className="pb-td-desc">
+                &nbsp;&nbsp;{item.treatment.toUpperCase()}
+              </td>
               <td className="pb-td-num">{item.qty} Nos</td>
               <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
               <td className="pb-td-num">{formatBillAmount(item.amount)}</td>
               <td className="pb-td-total">
-                {i === printableTreatmentCharges.length - 1 ? <strong>{formatBillAmount(totals.treatmentTotal)}</strong> : ""}
+                {i === printableTreatmentCharges.length - 1 ? (
+                  <strong>{formatBillAmount(totals.treatmentTotal)}</strong>
+                ) : (
+                  ""
+                )}
               </td>
             </tr>
           ))}
@@ -701,13 +821,24 @@ const Invoice = () => {
             <tr key={`e-${i}`} className="pb-data-row pb-extra-row">
               <td className="pb-td-desc">
                 {item.type.toUpperCase()}
-                {isPreview && i === 0 && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(3)}>Edit</button>}
+                {isPreview && i === 0 && (
+                  <button
+                    className="preview-edit-btn"
+                    onClick={() => handlePreviewEdit(3)}
+                  >
+                    Edit
+                  </button>
+                )}
               </td>
               <td className="pb-td-num">{toNumber(item.qty)}</td>
               <td className="pb-td-num">{formatBillAmount(item.rate)}</td>
               <td className="pb-td-num">{formatBillAmount(item.amount)}</td>
               <td className="pb-td-total">
-                {i === printableAdditionalCharges.length - 1 ? <strong>{formatBillAmount(totals.extraTotal)}</strong> : ""}
+                {i === printableAdditionalCharges.length - 1 ? (
+                  <strong>{formatBillAmount(totals.extraTotal)}</strong>
+                ) : (
+                  ""
+                )}
               </td>
             </tr>
           ))}
@@ -715,40 +846,75 @@ const Invoice = () => {
           {/* Extras Round Off */}
           <tr className="pb-data-row pb-extra-row">
             <td className="pb-td-desc">EXTRAS ROUND OFF</td>
-            <td className="pb-td-num"></td><td className="pb-td-num"></td><td className="pb-td-num"></td>
-            <td className="pb-td-total"><strong>0.00</strong></td>
+            <td className="pb-td-num"></td>
+            <td className="pb-td-num"></td>
+            <td className="pb-td-num"></td>
+            <td className="pb-td-total">
+              <strong>0.00</strong>
+            </td>
           </tr>
 
           {/* Grand Totals */}
           <tr className="pb-grand-row">
             <td className="pb-grand-label">Total Bill Amount</td>
-            <td></td><td></td><td></td>
-            <td className="pb-grand-value"><strong>{formatBillAmount(totals.gross)}</strong></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td className="pb-grand-value">
+              <strong>{formatBillAmount(totals.gross)}</strong>
+            </td>
           </tr>
           <tr className="pb-grand-row">
             <td className="pb-grand-label">
               Advance Amount Paid
-              {isPreview && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(4)}>Edit</button>}
+              {isPreview && (
+                <button
+                  className="preview-edit-btn"
+                  onClick={() => handlePreviewEdit(4)}
+                >
+                  Edit
+                </button>
+              )}
             </td>
-            <td></td><td></td>
-            <td className="pb-td-num"><strong>{formatBillAmount(totals.advance)}</strong></td>
-            <td className="pb-grand-value"><strong>{formatBillAmount(totals.advance)}</strong></td>
+            <td></td>
+            <td></td>
+            <td className="pb-td-num">
+              <strong>{formatBillAmount(totals.advance)}</strong>
+            </td>
+            <td className="pb-grand-value">
+              <strong>{formatBillAmount(totals.advance)}</strong>
+            </td>
           </tr>
           {printablePayments.map((item, i) => (
             <tr key={`p-${i}`} className="pb-grand-row pb-payment-row">
               <td className="pb-grand-label">
                 Amount Paid ({item.method.toUpperCase()})
-                {isPreview && i === 0 && <button className="preview-edit-btn" onClick={() => handlePreviewEdit(4)}>Edit</button>}
+                {isPreview && i === 0 && (
+                  <button
+                    className="preview-edit-btn"
+                    onClick={() => handlePreviewEdit(4)}
+                  >
+                    Edit
+                  </button>
+                )}
               </td>
-              <td></td><td></td><td></td>
-              <td className="pb-grand-value"><strong>{formatBillAmount(item.amount)}</strong></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td className="pb-grand-value">
+                <strong>{formatBillAmount(item.amount)}</strong>
+              </td>
             </tr>
           ))}
           <tr className="pb-grand-row" style={{ backgroundColor: "#f9fafb" }}>
             <td className="pb-grand-label">Remaining Amount Payable</td>
-            <td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td className="pb-grand-value">
-              <strong style={{ color: totals.balance > 0 ? "#dc2626" : "#16a34a" }}>
+              <strong
+                style={{ color: totals.balance > 0 ? "#dc2626" : "#16a34a" }}
+              >
                 {formatBillAmount(totals.balance)}
               </strong>
             </td>
@@ -759,8 +925,8 @@ const Invoice = () => {
       {/* ── FOOTER ── */}
       <div className="pb-footer-box">
         <div className="pb-footer-note">
-          I Agree that I am responsible for the full payment of the bill
-          in the event it is not paid by the company or person indicated.
+          I Agree that I am responsible for the full payment of the bill in the
+          event it is not paid by the company or person indicated.
         </div>
         <div className="pb-footer-sign">
           <div className="pb-footer-sign-label">Auth. Signatory</div>
@@ -774,7 +940,9 @@ const Invoice = () => {
 
   return (
     <div
-      className={`invoice-container ${activeStep === 6 ? "print-ready" : ""}`}
+      className={`invoice-container ${activeStep === 6 ? "print-ready" : ""} ${
+        isPreviewPrinting ? "preview-print-mode" : ""
+      }`}
       onClick={() => {
         setShowPatientList(false);
         setRoomCharges((prev) => prev.map((r) => ({ ...r, showList: false })));
@@ -794,7 +962,9 @@ const Invoice = () => {
             <div className="step-progress-pill">Step {activeStep} of 5</div>
           </div>
 
-          <div className={`invoice-main-layout ${activeStep === 5 ? "preview-mode" : ""}`}>
+          <div
+            className={`invoice-main-layout ${activeStep === 5 ? "preview-mode" : ""}`}
+          >
             {/* Step Navigation Sidebar */}
             {activeStep !== 5 && (
               <aside className="invoice-steps-sidebar">
@@ -1129,10 +1299,10 @@ const Invoice = () => {
                                     )}
                                     {(row.room
                                       ? roomOptions.filter((opt) =>
-                                        `${opt.name} ${opt.group}`
-                                          .toLowerCase()
-                                          .includes(row.room.toLowerCase()),
-                                      )
+                                          `${opt.name} ${opt.group}`
+                                            .toLowerCase()
+                                            .includes(row.room.toLowerCase()),
+                                        )
                                       : roomOptions
                                     ).map((opt) => (
                                       <div
@@ -1300,12 +1470,12 @@ const Invoice = () => {
                                   <div className="table-dropdown">
                                     {(row.treatment
                                       ? treatmentOptions.filter((opt) =>
-                                        opt.name
-                                          .toLowerCase()
-                                          .includes(
-                                            row.treatment.toLowerCase(),
-                                          ),
-                                      )
+                                          opt.name
+                                            .toLowerCase()
+                                            .includes(
+                                              row.treatment.toLowerCase(),
+                                            ),
+                                        )
                                       : treatmentOptions
                                     ).map((opt) => (
                                       <div
@@ -1456,51 +1626,71 @@ const Invoice = () => {
                               </select>
                             </td>
                             <td>
-                              <input
-                                type="number"
-                                min="0"
-                                value={row.qty}
-                                onFocus={() => {
-                                  if (Number(row.qty) === 0) {
+                              {row.type === "Food Charges" ? (
+                                "-"
+                              ) : (
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={row.qty}
+                                  onFocus={() => {
+                                    if (Number(row.qty) === 0) {
+                                      handleAdditionalChargeChange(
+                                        index,
+                                        "qty",
+                                        "",
+                                      );
+                                    }
+                                  }}
+                                  onChange={(e) =>
                                     handleAdditionalChargeChange(
                                       index,
                                       "qty",
-                                      "",
-                                    );
+                                      e.target.value,
+                                    )
                                   }
-                                }}
-                                onChange={(e) =>
-                                  handleAdditionalChargeChange(
-                                    index,
-                                    "qty",
-                                    e.target.value,
-                                  )
-                                }
-                              />
+                                />
+                              )}
+                            </td>
+                            <td>
+                              {row.type === "Food Charges" ? (
+                                "-"
+                              ) : (
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={row.rate}
+                                  onFocus={() => {
+                                    if (Number(row.rate) === 0) {
+                                      const newRows = [...additionalCharges];
+                                      newRows[index].rate = "";
+                                      setAdditionalCharges(newRows);
+                                    }
+                                  }}
+                                  onChange={(e) =>
+                                    handleAdditionalChargeChange(
+                                      index,
+                                      "rate",
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                              )}
                             </td>
                             <td>
                               <input
                                 type="number"
                                 min="0"
-                                value={row.rate}
-                                onFocus={() => {
-                                  if (Number(row.rate) === 0) {
-                                    const newRows = [...additionalCharges];
-                                    newRows[index].rate = "";
-                                    setAdditionalCharges(newRows);
-                                  }
-                                }}
+                                value={row.amount}
+                                readOnly={row.type !== "Food Charges"}
                                 onChange={(e) =>
                                   handleAdditionalChargeChange(
                                     index,
-                                    "rate",
+                                    "amount",
                                     e.target.value,
                                   )
                                 }
                               />
-                            </td>
-                            <td>
-                              <input type="text" value={row.amount} readOnly />
                             </td>
                             <td>
                               <button
@@ -1534,16 +1724,22 @@ const Invoice = () => {
                   <h2>Payment Information</h2>
                   <div className="payment-layout">
                     <div className="payment-table-side">
-                      <div className="modern-field" style={{ marginBottom: "20px" }}>
+                      <div
+                        className="modern-field"
+                        style={{ marginBottom: "20px" }}
+                      >
                         <label>Advance Amount Paid</label>
                         <input
                           type="number"
                           min="0"
                           value={advanceAmount}
                           onFocus={() => {
-                            if (Number(advanceAmount) === 0) setAdvanceAmount("");
+                            if (Number(advanceAmount) === 0)
+                              setAdvanceAmount("");
                           }}
-                          onChange={(e) => setAdvanceAmount(clampNonNegative(e.target.value))}
+                          onChange={(e) =>
+                            setAdvanceAmount(clampNonNegative(e.target.value))
+                          }
                         />
                       </div>
                       <div className="section-header-row">
@@ -1656,7 +1852,10 @@ const Invoice = () => {
                   <div className="review-header">
                     <h2>Bill Preview</h2>
                   </div>
-                  <div style={{ paddingBottom: "20px" }}>
+                  <div
+                    className="preview-print-area"
+                    style={{ paddingBottom: "20px" }}
+                  >
                     {renderPrintableBill(true)}
                   </div>
                 </div>
@@ -1710,24 +1909,41 @@ const Invoice = () => {
                       </svg>
                     </button>
                   ) : activeStep === 5 ? (
-                    <button
-                      className="nav-btn success"
-                      disabled={createStatus === "loading"}
-                      onClick={handleGenerateAndPrint}
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
+                    <>
+                      <button
+                        className="nav-btn draft"
+                        disabled={createStatus === "loading"}
+                        onClick={handlePrintPreviewCopy}
                       >
-                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-                        <polyline points="13 2 13 9 20 9" />
-                      </svg>
-                      {createStatus === "loading"
-                        ? "Generating..."
-                        : "Generate & Print"}
-                    </button>
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
+                        </svg>
+                        Print Preview Copy
+                      </button>
+                      <button
+                        className="nav-btn success"
+                        disabled={createStatus === "loading"}
+                        onClick={handleGenerateAndPrint}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                          <polyline points="13 2 13 9 20 9" />
+                        </svg>
+                        {createStatus === "loading"
+                          ? "Generating..."
+                          : "Generate & Print"}
+                      </button>
+                    </>
                   ) : null}
                 </div>
               </div>

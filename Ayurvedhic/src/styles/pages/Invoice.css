@@ -1191,6 +1191,23 @@
     .bill-preview-overlay,
     .bill-preview-overlay * { visibility: visible; }
 
+    .invoice-container.preview-print-mode .preview-print-area,
+    .invoice-container.preview-print-mode .preview-print-area * {
+        visibility: visible;
+    }
+
+    .invoice-container.preview-print-mode .preview-print-area {
+        position: absolute;
+        inset: 0;
+        padding: 0 !important;
+        background: white;
+    }
+
+    .invoice-container.preview-print-mode .preview-print-area .printable-bill {
+        box-shadow: none !important;
+        border: none !important;
+    }
+
     .bill-preview-overlay {
         position: absolute;
         inset: 0;
