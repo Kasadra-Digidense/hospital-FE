@@ -1,5 +1,71 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+/* --- NUMBER INPUT UX IMPROVEMENTS --- */
+/* Remove native spinner arrows (Chrome, Edge, Safari) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Remove spinner in Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* Smooth focus for inputs */
+input[type="number"],
+input[type="text"],
+select {
+    transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+
+/* Slightly muted subtotal */
+.summary-card .sum-row.small.muted {
+    color: #475569;
+    font-weight: 600;
+}
+
+/* --- Discount inline pill selector --- */
+.discount-inline {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.discount-input {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    width: 140px;
+    text-align: right;
+}
+.discount-pill {
+    display: inline-flex;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.06);
+    overflow: hidden;
+}
+.discount-pill button {
+    background: transparent;
+    border: none;
+    padding: 6px 10px;
+    color: #e6eef0;
+    font-weight: 700;
+    cursor: pointer;
+}
+.discount-pill button.active {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+@media (max-width: 520px) {
+    .discount-inline { flex-direction: row; gap: 6px; }
+    .discount-input { width: 110px; }
+}
+
+
 /* --- WIZARD LAYOUT --- */
 .invoice-container {
     min-height: 100vh;
@@ -606,6 +672,34 @@
 
 .due { color: #f87171; }
 .settled { color: #4ade80; }
+
+/* New payment summary breakdown styles */
+.summary-header {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:4px;
+}
+.summary-title{
+        color: #e6eef0;
+        font-weight:700;
+        font-size:14px;
+}
+.breakdown { display:flex; flex-direction:column; gap:8px; }
+.breakdown-row{ display:flex; justify-content:space-between; align-items:center; }
+.breakdown-row.muted .label { color: rgba(230,238,240,0.85); font-weight:600; }
+.breakdown-row.muted .value { color: rgba(230,238,240,0.95); }
+.breakdown-row .label { font-size:13px; }
+.breakdown-row .value { font-size:14px; font-weight:700; }
+.discount-amount { color: #86efac; /* light green to indicate saving */ }
+.final { margin-top:8px; padding-top:8px; }
+.final-amount { font-size:20px; font-weight:800; }
+.strong { font-weight:800; }
+
+@media (max-width:520px){
+    .summary-card { padding:18px; }
+    .final-amount { font-size:18px; }
+}
 
 /* --- REVIEW SECTION --- */
 .review-header {
