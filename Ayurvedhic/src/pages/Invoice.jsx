@@ -216,6 +216,9 @@ const Invoice = () => {
   // PAGE 6: Payment Details
   const [payments, setPayments] = useState(createInitialPayments);
   const [advanceAmount, setAdvanceAmount] = useState(0);
+  // Discount UI (UI-only) - supports flat amount or percentage mode
+  const [discountType, setDiscountType] = useState("percent"); // 'flat' or 'percent'
+  const [discountValue, setDiscountValue] = useState("");
 
   // LOGIC: Days Calculation
   const calculatedDays = useMemo(() => {
@@ -225,6 +228,20 @@ const Invoice = () => {
     const diffTime = Math.abs(end - start);
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   }, [admissionData.admissionDate, admissionData.dischargeDate]);
+
+  useEffect(() => {
+    // Prevent mouse wheel from changing number inputs when focused (global, unobtrusive)
+    const handleWheel = (e) => {
+      const active = document.activeElement;
+      if (!active) return;
+      if (active.tagName === "INPUT" && active.type === "number") {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    return () => window.removeEventListener("wheel", handleWheel);
+  }, []);
 
   useEffect(() => {
     if (patientsStatus !== "loading") {
@@ -269,25 +286,57 @@ const Invoice = () => {
     );
     const advance = parseFloat(advanceAmount) || 0;
     const totalPaid = currentPaid + advance;
-    const balance = gross - advance - currentPaid;
+    const balance = gross  - advance - currentPaid;
 
     return {
-      roomTotal,
-      treatmentTotal,
-      extraTotal,
-      gross,
-      advance,
-      currentPaid,
-      totalPaid,
-      balance,
-    };
+  roomTotal,
+  treatmentTotal,
+  extraTotal,
+  gross,
+ 
+  advance,
+  currentPaid,
+  totalPaid,
+  balance,
+};
   }, [
     roomCharges,
     treatmentCharges,
     additionalCharges,
     payments,
     advanceAmount,
+    
   ]);
+
+  // Compute UI-only discount (flat or percent) and final payable preview (doesn't mutate existing totals or payload)
+  const discountAmount = useMemo(() => {
+    const raw = parseFloat(discountValue);
+    const val = Number.isFinite(raw) ? raw : 0;
+    const gross = totals?.gross || 0;
+    if (discountType === "percent") {
+      const pct = Math.max(0, Math.min(100, val));
+      return (pct / 100) * gross;
+    }
+    // flat
+    return Math.max(0, Math.min(val, gross));
+  }, [discountType, discountValue, totals?.gross]);
+
+  const balance = useMemo(() => {
+  return (
+    totals.gross -
+    discountAmount -
+    totals.advance -
+    totals.currentPaid
+  );
+}, [totals, discountAmount]);
+
+  const finalPayableUI = useMemo(() => {
+    // gross - discount - advance - currentPaid (UI only)
+    const gross = totals?.gross || 0;
+    const advance = totals?.advance || 0;
+    const currentPaid = totals?.currentPaid || 0;
+    return gross - discountAmount - advance - currentPaid;
+  }, [totals, discountAmount]);
 
   // HANDLERS
   const validateStep = (step) => {
@@ -557,13 +606,14 @@ const Invoice = () => {
       discharge_date: admissionData.dischargeDate,
       bill_date: admissionData.dischargeDate,
       consultant: admissionData.consultant,
+      discount: toNumber(discountAmount),
       room_total: totals.roomTotal,
       treatment_total: totals.treatmentTotal,
       extra_total: totals.extraTotal,
       gross_total: totals.gross,
       advance_amount: totals.advance,
       total_paid: totals.totalPaid,
-      balance: totals.balance,
+      balance: balance,
       room_charges: invoiceRoomCharges,
       treatment_charges: invoiceTreatmentCharges,
       additional_charges: additionalCharges
@@ -906,16 +956,44 @@ const Invoice = () => {
               </td>
             </tr>
           ))}
+          {/* Discount (UI-only) shown in printable views for clarity */}
+          <tr className="pb-grand-row pb-discount-row">
+            <td className="pb-grand-label">
+              Discount
+              {discountValue
+                ? ` (${discountType === "percent" ? discountValue + "%" : "₹" + formatBillAmount(discountAmount)})`
+                : ""}
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td className="pb-grand-value">
+              <strong>-{formatBillAmount(discountAmount)}</strong>
+            </td>
+          </tr>
+
+          {/* Amount to Pay / Extra Paid - computed in UI only (does not modify payload) */}
           <tr className="pb-grand-row" style={{ backgroundColor: "#f9fafb" }}>
-            <td className="pb-grand-label">Remaining Amount Payable</td>
+            <td className="pb-grand-label">
+              {finalPayableUI < 0 ? "Extra Paid" : "Amount to Pay"}
+            </td>
             <td></td>
             <td></td>
             <td></td>
             <td className="pb-grand-value">
               <strong
-                style={{ color: totals.balance > 0 ? "#dc2626" : "#16a34a" }}
+                style={{
+                  color:
+                    finalPayableUI < 0
+                      ? "#16a34a"
+                      : finalPayableUI > 0
+                        ? "#fb923c"
+                        : "#94a3b8",
+                }}
               >
-                {formatBillAmount(totals.balance)}
+                {finalPayableUI < 0
+                  ? `-₹${formatBillAmount(Math.abs(finalPayableUI))}`
+                  : `₹${formatBillAmount(finalPayableUI)}`}
               </strong>
             </td>
           </tr>
@@ -1742,6 +1820,72 @@ const Invoice = () => {
                           }
                         />
                       </div>
+                      <div className="modern-field">
+                        <label>Discount</label>
+                        <div className="discount-inline">
+                          <input
+                            className="discount-input"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder={
+                              discountType === "percent"
+                                ? "0 - 100"
+                                : "Optional discount amount"
+                            }
+                            value={discountValue}
+                            onFocus={() => {
+                              if (Number(discountValue) === 0)
+                                setDiscountValue("");
+                            }}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === "") {
+                                setDiscountValue("");
+                                return;
+                              }
+                              const n = parseFloat(v);
+                              if (Number.isNaN(n)) return;
+                              if (discountType === "percent") {
+                                const clamped = Math.max(0, Math.min(100, n));
+                                setDiscountValue(String(clamped));
+                              } else {
+                                const clamped = Math.max(
+                                  0,
+                                  Math.min(n, totals?.gross || 0),
+                                );
+                                setDiscountValue(String(clamped));
+                              }
+                            }}
+                          />
+
+                          <div className="discount-pill">
+                            <button
+                              type="button"
+                              className={
+                                discountType === "flat" ? "active" : ""
+                              }
+                              onClick={() => setDiscountType("flat")}
+                            >
+                              ₹
+                            </button>
+
+                            <button
+                              type="button"
+                              className={
+                                discountType === "percent" ? "active" : ""
+                              }
+                              onClick={() => setDiscountType("percent")}
+                            >
+                              %
+                            </button>
+                          </div>
+                        </div>
+                        <div className="pr-field-hint">
+                          Use ₹ for fixed amount discount, or % for
+                          percentage-based discount
+                        </div>
+                      </div>
                       <div className="section-header-row">
                         <h3>Current Payments</h3>
                         <button
@@ -1823,22 +1967,49 @@ const Invoice = () => {
                     </div>
                     <div className="payment-summary-side">
                       <div className="summary-card">
-                        <div className="sum-row">
-                          <span>Total Bill Amount</span>{" "}
-                          <strong>₹{totals.gross.toFixed(2)}</strong>
+                        <div className="summary-header">
+                          <div className="summary-title">Payment Summary</div>
                         </div>
-                        <div className="sum-row">
-                          <span>Advance Amount</span>{" "}
-                          <strong>₹{totals.advance.toFixed(2)}</strong>
-                        </div>
-                        <div className="sum-divider"></div>
-                        <div className="sum-row grand">
-                          <span>Amount Payable</span>{" "}
-                          <strong
-                            className={totals.balance > 0 ? "due" : "settled"}
-                          >
-                            ₹{totals.balance.toFixed(2)}
-                          </strong>
+
+                        <div className="breakdown">
+                          <div className="breakdown-row muted">
+                            <div className="label">Total Amount</div>
+                            <div className="value">
+                              ₹{formatBillAmount(totals.gross)}
+                            </div>
+                          </div>
+
+                          <div className="breakdown-row muted">
+                            <div className="label">Advance Paid</div>
+                            <div className="value">
+                              -₹{formatBillAmount(totals.advance)}
+                            </div>
+                          </div>
+
+                          <div className="breakdown-row muted">
+                            <div className="label">
+                              Discount
+                              {discountValue
+                                ? ` (${discountType === "percent" ? discountValue + "%" : "₹" + formatBillAmount(discountAmount)})`
+                                : ""}
+                            </div>
+                            <div className="value discount-amount">
+                              -₹{formatBillAmount(discountAmount)}
+                            </div>
+                          </div>
+
+                          <div className="sum-divider"></div>
+
+                          <div className="breakdown-row final">
+                            <div className="label strong">Amount to Pay</div>
+                            <div
+                              className={`value strong final-amount ${finalPayableUI < 0 ? "overpaid" : finalPayableUI > 0 ? "due" : "zero"}`}
+                            >
+                              {finalPayableUI < 0
+                                ? `-₹${formatBillAmount(Math.abs(finalPayableUI))}`
+                                : `₹${formatBillAmount(finalPayableUI)}`}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
