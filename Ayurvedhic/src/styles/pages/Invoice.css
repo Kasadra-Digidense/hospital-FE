@@ -293,32 +293,61 @@ select {
   right: 0;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);
   z-index: 100;
-  overflow: hidden;
+  max-height: 320px;
+  overflow-y: auto;
   border: 1px solid #e2e8f0;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.dropdown-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdown-list::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 10px;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
 }
 
 .dropdown-item {
-  padding: 12px 20px;
+  padding: 14px 20px;
   display: flex;
   flex-direction: column;
   cursor: pointer;
   border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
 }
 
 .dropdown-item:hover {
   background: #f8fafc;
+  padding-left: 24px;
 }
 
 .dropdown-item span {
   font-weight: 700;
-  color: #1e293b;
+  color: #0f172a;
+  font-size: 14.5px;
 }
 
 .dropdown-item small {
   color: #64748b;
-  font-size: 12px;
+  font-size: 12.5px;
+  margin-top: 2px;
 }
 
 /* --- SUMMARY CARDS --- */
