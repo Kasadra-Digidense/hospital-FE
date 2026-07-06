@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useEffect } from "react";
+﻿import React, { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "../styles/pages/Invoice.css";
+import "../styles/pages/PatientDetails.css";
 import ayurLogo from "../assets/ayur_logo.png";
 import {
   createInvoice,
@@ -8,6 +9,7 @@ import {
   fetchInvoiceRooms,
   resetInvoiceCreation,
 } from "../features/invoiceSlice";
+import { editPatient } from "../features/patientDetailsSlice";
 import { fetchDoctors } from "../features/doctorSlice";
 import { fetchTreatments as fetchTreatmentCatalog } from "../features/treatmentSlice";
 
@@ -86,15 +88,15 @@ const normalizeTreatment = (treatment) => ({
     "",
   rate: Number(
     treatment.item_rate ??
-      treatment.itemRate ??
-      treatment.item_price ??
-      treatment.itemPrice ??
-      treatment.rate ??
-      treatment.amount ??
-      treatment.price ??
-      treatment.fee ??
-      treatment.charge ??
-      0,
+    treatment.itemRate ??
+    treatment.item_price ??
+    treatment.itemPrice ??
+    treatment.rate ??
+    treatment.amount ??
+    treatment.price ??
+    treatment.fee ??
+    treatment.charge ??
+    0,
   ),
 });
 
@@ -197,6 +199,99 @@ const Invoice = () => {
   const [patientSearch, setPatientSearch] = useState("");
   const [showPatientList, setShowPatientList] = useState(false);
 
+  // Quick-Edit Patient Drawer (Invoice Step 1)
+  const [patientDrawer, setPatientDrawer] = useState({ isOpen: false, formData: null });
+  const [drawerSaving, setDrawerSaving] = useState(false);
+
+
+
+  const openPatientDrawer = () => {
+    if (!selectedPatient) return;
+    console.log(selectedPatient);
+
+    // Try to find the raw patient object from the invoice patients list
+    const raw = patients.find(
+      (pt) => String(pt.id) === String(selectedPatient.id)
+    );
+
+    const addressObj = (raw && (raw.address || {})) || {};
+
+    setPatientDrawer({
+      isOpen: true,
+      formData: {
+        name: selectedPatient.name || "",
+        age: selectedPatient.age || "",
+        gender: selectedPatient.gender || "",
+        phone: selectedPatient.phone || "",
+        email: selectedPatient.email || "",
+        // address fields: prefer structured address from raw patient, fall back to top-level fields
+        houseName: addressObj.houseName || raw?.houseName || raw?.house_name || "",
+        street: addressObj.street || raw?.street || "",
+        city: addressObj.city || raw?.city || raw?.place || "",
+        district: addressObj.district || raw?.district || "",
+        state: addressObj.state || raw?.state || "",
+        pincode: addressObj.pincode || raw?.pincode || raw?.pin || "",
+      },
+    });
+
+  };
+
+  const handleDrawerChange = (e) => {
+    const { name, value } = e.target;
+    setPatientDrawer((prev) => ({
+      ...prev,
+      formData: { ...prev.formData, [name]: value },
+    }));
+  };
+
+  const handleDrawerSave = async () => {
+    if (!selectedPatient?.id || !patientDrawer.formData) return;
+    setDrawerSaving(true);
+    try {
+      const payload = {
+        name: patientDrawer.formData.name,
+        age: Number(patientDrawer.formData.age) || 0,
+        gender: patientDrawer.formData.gender,
+        phone: patientDrawer.formData.phone,
+        email: patientDrawer.formData.email || null,
+        place: patientDrawer.formData.city || "",
+        address: {
+          houseName: patientDrawer.formData.houseName || "",
+          street: patientDrawer.formData.street || "",
+          city: patientDrawer.formData.city || "",
+          district: patientDrawer.formData.district || "",
+          state: patientDrawer.formData.state || "",
+          pincode: patientDrawer.formData.pincode || "",
+        },
+      };
+      // Dispatch the existing editPatient thunk to trigger the PATCH API
+      const result = await dispatch(
+        editPatient({ id: selectedPatient.id, patientData: payload }),
+      );
+
+      // Only update UI if backend update succeeded
+      if (editPatient.fulfilled.match(result)) {
+        const builtAddress = buildPatientAddress(payload.address, payload.place);
+        setSelectedPatient((prev) => ({
+          ...prev,
+          name: payload.name,
+          age: payload.age,
+          gender: payload.gender,
+          phone: payload.phone,
+          email: payload.email,
+          address: builtAddress,
+          city: payload.place || prev?.city,
+          pincode: payload.address.pincode || prev?.pincode,
+        }));
+
+        setPatientSearch(payload.name);
+        setPatientDrawer({ isOpen: false, formData: null });
+      }
+    } finally {
+      setDrawerSaving(false);
+    }
+  };
+
   // PAGE 2: Admission Data
   const [admissionData, setAdmissionData] = useState(INITIAL_ADMISSION_DATA);
 
@@ -286,26 +381,26 @@ const Invoice = () => {
     );
     const advance = parseFloat(advanceAmount) || 0;
     const totalPaid = currentPaid + advance;
-    const balance = gross  - advance - currentPaid;
+    const balance = gross - advance - currentPaid;
 
     return {
-  roomTotal,
-  treatmentTotal,
-  extraTotal,
-  gross,
- 
-  advance,
-  currentPaid,
-  totalPaid,
-  balance,
-};
+      roomTotal,
+      treatmentTotal,
+      extraTotal,
+      gross,
+
+      advance,
+      currentPaid,
+      totalPaid,
+      balance,
+    };
   }, [
     roomCharges,
     treatmentCharges,
     additionalCharges,
     payments,
     advanceAmount,
-    
+
   ]);
 
   // Compute UI-only discount (flat or percent) and final payable preview (doesn't mutate existing totals or payload)
@@ -322,13 +417,13 @@ const Invoice = () => {
   }, [discountType, discountValue, totals?.gross]);
 
   const balance = useMemo(() => {
-  return (
-    totals.gross -
-    discountAmount -
-    totals.advance -
-    totals.currentPaid
-  );
-}, [totals, discountAmount]);
+    return (
+      totals.gross -
+      discountAmount -
+      totals.advance -
+      totals.currentPaid
+    );
+  }, [totals, discountAmount]);
 
   const finalPayableUI = useMemo(() => {
     // gross - discount - advance - currentPaid (UI only)
@@ -692,11 +787,11 @@ const Invoice = () => {
       style={
         isPreview
           ? {
-              margin: "0 auto",
-              transformOrigin: "top center",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-              border: "1px solid #e2e8f0",
-            }
+            margin: "0 auto",
+            transformOrigin: "top center",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+            border: "1px solid #e2e8f0",
+          }
           : {}
       }
     >
@@ -1018,9 +1113,8 @@ const Invoice = () => {
 
   return (
     <div
-      className={`invoice-container ${activeStep === 6 ? "print-ready" : ""} ${
-        isPreviewPrinting ? "preview-print-mode" : ""
-      }`}
+      className={`invoice-container ${activeStep === 6 ? "print-ready" : ""} ${isPreviewPrinting ? "preview-print-mode" : ""
+        }`}
       onClick={() => {
         setShowPatientList(false);
         setRoomCharges((prev) => prev.map((r) => ({ ...r, showList: false })));
@@ -1152,8 +1246,18 @@ const Invoice = () => {
                   {selectedPatient && (
                     <div className="patient-summary-card animate-fade-in">
                       <div className="card-header">
-                        <h3>Patient Summary</h3>
-                        <span className="badge">Verified</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <h3>Patient Summary</h3>
+                          <span className="badge">Verified</span>
+                        </div>
+                        <button
+                          className="patient-details-inline-edit-btn"
+                          onClick={openPatientDrawer}
+                          type="button"
+                          title="Edit patient details"
+                        >
+                          ✎ Edit Patient
+                        </button>
                       </div>
                       <div className="card-grid">
                         <div className="info-grp">
@@ -1377,10 +1481,10 @@ const Invoice = () => {
                                     )}
                                     {(row.room
                                       ? roomOptions.filter((opt) =>
-                                          `${opt.name} ${opt.group}`
-                                            .toLowerCase()
-                                            .includes(row.room.toLowerCase()),
-                                        )
+                                        `${opt.name} ${opt.group}`
+                                          .toLowerCase()
+                                          .includes(row.room.toLowerCase()),
+                                      )
                                       : roomOptions
                                     ).map((opt) => (
                                       <div
@@ -1548,12 +1652,12 @@ const Invoice = () => {
                                   <div className="table-dropdown">
                                     {(row.treatment
                                       ? treatmentOptions.filter((opt) =>
-                                          opt.name
-                                            .toLowerCase()
-                                            .includes(
-                                              row.treatment.toLowerCase(),
-                                            ),
-                                        )
+                                        opt.name
+                                          .toLowerCase()
+                                          .includes(
+                                            row.treatment.toLowerCase(),
+                                          ),
+                                      )
                                       : treatmentOptions
                                     ).map((opt) => (
                                       <div
@@ -2156,8 +2260,178 @@ const Invoice = () => {
           {renderPrintableBill(false)}
         </div>
       )}
+
+      {/* ── Quick-Edit Patient Drawer (Invoice Step 1) ── */}
+      {patientDrawer.isOpen && patientDrawer.formData && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="patient-details-edit-drawer-overlay"
+            onClick={() => setPatientDrawer({ isOpen: false, formData: null })}
+          />
+          {/* Drawer Panel */}
+          <aside className="patient-details-edit-drawer">
+            <div className="patient-details-drawer-header">
+              <div>
+                <h2 className="patient-details-drawer-title">Edit Patient</h2>
+                <p className="patient-details-drawer-subtitle">
+                  Changes apply instantly to the invoice summary.
+                </p>
+              </div>
+              <button
+                className="patient-details-drawer-close"
+                onClick={() => setPatientDrawer({ isOpen: false, formData: null })}
+                type="button"
+                aria-label="Close drawer"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="patient-details-drawer-body">
+              {/* Personal Information */}
+              <div className="patient-details-section">
+                <h3 className="patient-details-section-title">Personal Information</h3>
+                <div className="patient-details-form-grid">
+                  <div className="patient-details-form-group patient-details-form-group--full">
+                    <label className="patient-details-label">Patient Full Name *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      className="patient-details-input"
+                      value={patientDrawer.formData.name}
+                      onChange={handleDrawerChange}
+                    />
+                  </div>
+                  <div className="patient-details-form-group">
+                    <label className="patient-details-label">Age (years) *</label>
+                    <input
+                      type="number"
+                      name="age"
+                      className="patient-details-input"
+                      value={patientDrawer.formData.age}
+                      onChange={handleDrawerChange}
+                    />
+                  </div>
+                  <div className="patient-details-form-group">
+                    <label className="patient-details-label">Gender *</label>
+                    <select
+                      name="gender"
+                      className="patient-details-input"
+                      value={patientDrawer.formData.gender}
+                      onChange={handleDrawerChange}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="patient-details-form-group">
+                    <label className="patient-details-label">Mobile Number *</label>
+                    <input
+                      type="text"
+                      name="phone"
+                      className="patient-details-input"
+                      value={patientDrawer.formData.phone}
+                      onChange={handleDrawerChange}
+                    />
+                  </div>
+                  <div className="patient-details-form-group patient-details-form-group--full">
+                    <label className="patient-details-label">Email Address (optional)</label>
+                    <input
+                      type="email"
+                      name="email"
+                      className="patient-details-input"
+                      value={patientDrawer.formData.email}
+                      onChange={handleDrawerChange}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Address Information */}
+              <div className="patient-details-section">
+                <h3 className="patient-details-section-title">Address Information</h3>
+                <div className="patient-details-form-grid">
+                  <div className="patient-details-form-group patient-details-form-group--full">
+                    <label className="patient-details-label">House Name / Building</label>
+                    <input
+                      type="text"
+                      name="houseName"
+                      className="patient-details-input"
+                      value={patientDrawer.formData.houseName}
+                      onChange={handleDrawerChange}
+                    />
+                  </div>
+                  <div className="patient-details-form-group">
+                    <label className="patient-details-label">Village / City *</label>
+                    <input
+                      type="text"
+                      name="city"
+                      className="patient-details-input"
+                      value={patientDrawer.formData.city}
+                      onChange={handleDrawerChange}
+                    />
+                  </div>
+                  <div className="patient-details-form-group">
+                    <label className="patient-details-label">District *</label>
+                    <input
+                      type="text"
+                      name="district"
+                      className="patient-details-input"
+                      value={patientDrawer.formData.district}
+                      onChange={handleDrawerChange}
+                    />
+                  </div>
+                  <div className="patient-details-form-group">
+                    <label className="patient-details-label">State *</label>
+                    <input
+                      type="text"
+                      name="state"
+                      className="patient-details-input"
+                      value={patientDrawer.formData.state}
+                      onChange={handleDrawerChange}
+                    />
+                  </div>
+                  <div className="patient-details-form-group">
+                    <label className="patient-details-label">Pincode</label>
+                    <input
+                      type="text"
+                      name="pincode"
+                      className="patient-details-input"
+                      value={patientDrawer.formData.pincode}
+                      onChange={handleDrawerChange}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="patient-details-drawer-footer">
+              <button
+                className="patient-details-action-btn patient-details-action-btn--edit"
+                onClick={() => setPatientDrawer({ isOpen: false, formData: null })}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="patient-details-btn-primary"
+                onClick={handleDrawerSave}
+                disabled={drawerSaving}
+                type="button"
+              >
+                {drawerSaving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </aside>
+        </>
+      )}
     </div>
   );
 };
 
 export default Invoice;
+
+

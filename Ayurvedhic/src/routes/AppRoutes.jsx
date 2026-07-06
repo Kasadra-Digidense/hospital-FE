@@ -8,6 +8,7 @@ import DoctorRegister from "../pages/DoctorRegister";
 import Invoice from "../pages/Invoice";
 import Treatments from "../pages/Treatments";
 import ProtectedRoute from "./ProtectedRoute";
+import PatientDetails from "../pages/PatientDetails";
 
 const AppRoutes = () => {
   return (
@@ -21,6 +22,7 @@ const AppRoutes = () => {
           <Route path="/doctor-register" element={<DoctorRegister />} />
           <Route path="/invoice" element={<Invoice />} />
           <Route path="/treatments" element={<Treatments />} />
+          <Route path="/patient-details" element={<PatientDetails />} />
         </Route>
       </Route>
     </Routes>
